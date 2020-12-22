@@ -63,7 +63,7 @@ async def route_shop(request):
 @app.route('/login')
 @jinja.template('login.html')
 async def route_login(request):
-    return
+    return {"data":storeconfig.firebase_web_cert}
 
 @app.route("/tokenlogin")
 async def route_saveuser(request):
