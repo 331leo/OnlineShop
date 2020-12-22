@@ -96,7 +96,7 @@
 
     console.log(user)
     console.log(pvdata[0])
-    var data = {"token":token,"secret":secret,"user":pvdata}
+    var data = {"token":token,"secret":secret,"user":JSON.stringify(pvdata)}
     post_to_url(window.location.origin+"/tokenlogin",data)
     // ...
   }else{

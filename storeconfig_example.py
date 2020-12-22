@@ -1,5 +1,6 @@
 TossClientKey = "TOSS API KEY"
 TossSecretKey= "TOSS SECRET KEY"
+TossBasicAuthKey="BASE64 Encode Of secret key"
 
 coolsms_api_key = "COOLSMS API KEY"
 coolsms_api_secret = "COOLSMS API SECRET"
