@@ -6,6 +6,11 @@ coolsms_api_key = "COOLSMS API KEY"
 coolsms_api_secret = "COOLSMS API SECRET"
 coolsms_api_number = "COOLSMS PHONENUM"
 
+store_name="YOUR BRAND NAME"
+store_title="YOUR STORE NAME"
+
+notice_site="Twitter: @username"
+
 firebase_web_cert={
 "apiKey": "FIREBASE WEB CERTS",
 "authDomain": "FIREBASE WEB CERTS",
