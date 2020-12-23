@@ -124,7 +124,7 @@
           <a href="index.html" class="logo">
             <span
               ><img
-                src="assets/images/logos/logo.png"
+                src="{{store_logo}}"
                 width="240"
                 height="100"
                 alt=""
@@ -146,14 +146,15 @@
       <div id="main">
         <div class="inner">
           <header>
-            <h1>{{store_title}}<br /></h1>
+            <h1 style="font-family: Cafe24Oneprettynight;">{{store_title}}<br /></h1>
             <div id="userinfo">
               <img class="circle" src="" id="profilepic" />
-              {{notice_site}}
+              Twitter: @{{usertag}}
             </div>
           </header>
 
           <script>
+            var usertag = "{{usertag}}"
             function TossPay(orderid, amount, ordername) {
               tossPayments.requestPayment("카드", {
                 amount: amount,
@@ -178,14 +179,16 @@
                 if (code == 0) {
                   var photoURL = data["photoURL"];
                   var nickname = data["nickname"];
+                  var usertag = data['usertag'];
                   console.log(photoURL);
                   console.log(nickname);
+                  console.log(usertag)
                   window.nickname = nickname;
                   document.getElementById("userinfo").innerHTML =
                     '<img class="circle" src="" id="profilepic"/>' +
                     nickname +
                     "님 반갑습니다.<br>" +
-                    document.getElementById("userinfo").innerText;
+                    "Twitter: @"+usertag+"로 로그인됨";
                   document.getElementById("profilepic").src = photoURL;
                 } else {
                   window.location.href = window.location.origin + "/";
@@ -314,7 +317,7 @@
         	var numid=i+1
         	var boxid="box"+numid.toString()
         	var randstyle="style"+generateRandom(1,6).toString()
-        	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="" /></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p>'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
+        	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="" /></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="font-family: Cafe24Oneprettynight;">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
 
 
         }
@@ -337,7 +340,7 @@
         </style>
         <div class="inner">
           <section>
-            <h2>Links</h2>
+            <h2 style="font-family: Cafe24Oneprettynight;">Links</h2>
             <ul class="icons">
               <li>
                 <a
@@ -356,7 +359,7 @@
             </ul>
           </section>
           <ul class="copyright">
-            <li>
+            <li style="font-family: Cafe24Oneprettynight;">
               &copy; Copyright(C).2020 {{store_name}}., All rights reserved
             </li>
           </ul>

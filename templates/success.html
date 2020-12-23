@@ -15,6 +15,25 @@
     <meta property="og:title" content="SUCCESS: {{store_title}}" />
   </head>
   <body>
+  <style>
+    @font-face {
+    font-family: 'MaplestoryOTFLight';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFLight.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+	body, input, select, textarea, button {
+		color: #585858;
+		/*font-family: "Source Sans Pro", Helvetica, sans-serif;*/
+		font-family: 'MaplestoryOTFLight', Helvetica, sans-serif;
+		font-size: 16pt;
+		font-weight: 300;
+		line-height: 1.75;
+	}
+    body{
+      background-color: #7bd0c1;
+    }
+  </style>
     <script>
       var st = "{{text}}";
       st = st.replaceAll("<br>", "\n");
