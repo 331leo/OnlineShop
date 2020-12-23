@@ -8,8 +8,13 @@ coolsms_api_number = "COOLSMS PHONENUM"
 
 store_name="YOUR BRAND NAME"
 store_title="YOUR STORE NAME"
+store_description="OpenGraph Discription FOR sns"
+store_logo="https://link/to/your/logo -> ex) imgur"
 
 notice_site="Twitter: @username"
+
+naver_api_client_id="API CLIENT ID"
+naver_api_secret="API CLIENT SECRET"
 
 firebase_web_cert={
 "apiKey": "FIREBASE WEB CERTS",
