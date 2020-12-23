@@ -36,7 +36,7 @@ db = firestore.client()
 api_key = storeconfig.coolsms_api_key
 api_secret = storeconfig.coolsms_api_secret
 params = dict()
-params['type'] = 'sms'  # Message type ( sms, lms, mms, ata )
+params['type'] = 'lms'
 params['from'] = storeconfig.coolsms_api_number  # Sender number
 cool = Message(api_key, api_secret)
 
@@ -55,16 +55,44 @@ async def login(request):
 @app.route('/shop')
 @jinja.template('index.html')
 async def route_shop(request):
-    orderid=""
-    amout=""
-    ordername=""
-    customername=""
-    return {"TossClientKey":storeconfig.TossClientKey,"orderid":orderid,"amount":amout,"ordername":ordername,"customername":customername}
+
+    return {"TossClientKey":storeconfig.TossClientKey,"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"firedata":storeconfig.firebase_web_cert}
 
 @app.route('/login')
 @jinja.template('login.html')
 async def route_login(request):
     return {"data":storeconfig.firebase_web_cert}
+
+
+@app.route('/success')
+@jinja.template('success.html')
+async def success(request):
+    try:
+        data=request.args
+        orderid=data['orderid'][0]
+        doc_ref = db.collection(u"orders").document(f"{orderid}")
+        doc = doc_ref.get()
+        d = doc.to_dict()
+        basereturn={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title}
+        if d['paid'] == False:
+            basereturn.update({"text": "주문이 완료되지 않았습니다."})
+            return basereturn
+    except Exception as e:
+        basereturn.update({"text": "올바르지 않은 접근입니다."})
+        return basereturn
+    st=f"주문번호: {orderid}\n주문상품: {d['prodname']}\n가격: {d['price']}\n배송: {d['address']}\n"
+    basereturn.update({"text": f"주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
+
+    params['to'] = d['phonenum']
+    params['text'] = f'[{storeconfig.store_name}] 주문이 완료되었습니다!\n{st}영수증: {d["receiptUrl"]}\n'
+    try:
+        if not d['didsms']:
+            cool.send(params)
+            d.update({"didsms": True})
+            doc_ref.set(d)
+    except CoolsmsException as e:
+        return basereturn
+    return basereturn
 
 
 @app.route("/tokenlogin",methods = ['POST'])
@@ -120,7 +148,7 @@ async def buying(request):
     id=data['userid'][0]
     prodcode = data['prodcode'][0]
 
-
+    phonenum=data['phonenum'][0]
     postalcode = data['postalcode'][0]
     address = data['address'][0]
     building = data['building'][0]
@@ -139,7 +167,7 @@ async def buying(request):
     price=doc['price']
 
 
-    d={"address":finaladdress,"id":id,"prodcode":prodcode,"prodname":prodname,"price":price,"paid":False}
+    d={"address":finaladdress,"id":id,"prodcode":prodcode,"prodname":prodname,"price":price,"paid":False,"phonenum":phonenum}
     dbdoc = db.collection(f"orders").document(f"{order_num}")
     dbdoc.set(d)
     d.update({"order_num":order_num})
@@ -162,14 +190,19 @@ async def payproceed(request):
         res = requests.post(f"https://api.tosspayments.com/v1/payments/{paymentkey}",headers=headers,json=data)
         if res.status_code == requests.codes.ok:
             receipt=res.json()
+            receiptUrl=""
+            try:
+                receiptUrl=receipt['card']['receiptUrl']
+            except:
+                pass
             doc_ref = db.collection(u"receipts").document(f"{orderid}")
             doc_ref.set(receipt)
             doc_ref = db.collection(u"orders").document(f"{orderid}")
             doc = doc_ref.get()
             d = doc.to_dict()
-            d.update({"paid":True})
+            d.update({"paid":True,"receiptUrl":receiptUrl,"didsms":False})
             doc_ref.set(d)
-            return redirect("/success")
+            return redirect(f"/success?orderid={orderid}")
         else:
             return json(res.json())
         print(res)
@@ -177,10 +210,7 @@ async def payproceed(request):
     else:
         return json({"ERROR":"가격 임의 변경"})
 
-@app.route('/success')
-@jinja.template('login.html')
-async def success(request):
-    return {}
+
 @app.route('/payfail')
 async def payfail(request):
     return json({"ERROR":"알수없는에러, 문의바랍니다."})
