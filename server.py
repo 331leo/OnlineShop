@@ -40,6 +40,7 @@ Session(app)
 jinja = SanicJinja2(app)
 app.static('/assets', './assets')
 
+baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description}
 
 @app.route('/')
 async def login(request):
@@ -52,12 +53,16 @@ async def route_shop(request):
     plist=[]
     for p in products:
         plist.append(p.to_dict())
-    return {"TossClientKey":storeconfig.TossClientKey,"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site}
+    rdict=baserdict
+    rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site})
+    return rdict
 
 @app.route('/login')
 @jinja.template('login.html')
 async def route_login(request):
-    return {"data":storeconfig.firebase_web_cert}
+    rdict=baserdict
+    rdict.update({"data": storeconfig.firebase_web_cert})
+    return rdict
 
 
 @app.route('/success')
@@ -69,26 +74,30 @@ async def success(request):
         doc_ref = db.collection(u"orders").document(f"{orderid}")
         doc = doc_ref.get()
         d = doc.to_dict()
-        basereturn={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title}
+        rdict=baserdict
         if d['paid'] == False:
-            basereturn.update({"text": "주문이 완료되지 않았습니다."})
-            return basereturn
+            rdict.update({"text": "주문이 완료되지 않았습니다."})
+            return rdict
     except Exception as e:
-        basereturn.update({"text": "올바르지 않은 접근입니다."})
-        return basereturn
+        rdict.update({"text": "올바르지 않은 접근입니다."})
+        return rdict
     st=f"주문번호: {orderid}\n주문상품: {d['prodname']}\n가격: {d['price']}\n배송: {d['address']}\n"
-    basereturn.update({"text": f"주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
+    rdict.update({"text": f"주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
 
     params['to'] = d['phonenum']
-    params['text'] = f'[{storeconfig.store_name}] 주문이 완료되었습니다!\n{st}영수증: {d["receiptUrl"]}\n'
+    receipturl=d["receiptUrl"]
+    apiheader = {"X-Naver-Client-Id": storeconfig.naver_api_client_id,"X-Naver-Client-Secret": storeconfig.naver_api_secret}
+    res=requests.get("https://openapi.naver.com/v1/util/shorturl",headers=apiheader,params={"url":receipturl})
+    shortUrl=res.json()['result']['url']
+    params['text'] = f'[{storeconfig.store_name}] 주문이 완료되었습니다!\n{st}영수증: {shortUrl}\n'
     try:
         if not d['didsms']:
             cool.send(params)
             d.update({"didsms": True})
             doc_ref.set(d)
     except CoolsmsException as e:
-        return basereturn
-    return basereturn
+        return rdict
+    return rdict
 
 
 @app.route("/tokenlogin",methods = ['POST'])
