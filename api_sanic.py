@@ -1,9 +1,4 @@
 import datetime
-import random
-import aiofiles
-
-import hcskr
-import jwt
 import openpyxl
 import json as mjson
 from sanic import Sanic
@@ -12,8 +7,6 @@ from sanic.response import json
 from sanic.response import redirect
 from sdk.api.message import Message
 from sdk.exceptions import CoolsmsException
-import subprocess
-import pickle
 import pytz
 import storeconfig
 import firebase_admin
@@ -59,7 +52,7 @@ async def route_shop(request):
     plist=[]
     for p in products:
         plist.append(p.to_dict())
-    return {"TossClientKey":storeconfig.TossClientKey,"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"firedata":storeconfig.firebase_web_cert,"plist":plist}
+    return {"TossClientKey":storeconfig.TossClientKey,"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site}
 
 @app.route('/login')
 @jinja.template('login.html')
@@ -170,6 +163,7 @@ async def buying(request):
     price=doc['price']
 
 
+
     d={"address":finaladdress,"id":id,"prodcode":prodcode,"prodname":prodname,"price":price,"paid":False,"phonenum":phonenum}
     dbdoc = db.collection(f"orders").document(f"{order_num}")
     dbdoc.set(d)
@@ -217,9 +211,6 @@ async def payproceed(request):
 @app.route('/payfail')
 async def payfail(request):
     return json({"ERROR":"알수없는에러, 문의바랍니다."})
-
-
-
 
 
 @app.route('/test', methods = ['POST',"GET"])
