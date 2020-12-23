@@ -55,8 +55,11 @@ async def login(request):
 @app.route('/shop')
 @jinja.template('index.html')
 async def route_shop(request):
-
-    return {"TossClientKey":storeconfig.TossClientKey,"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"firedata":storeconfig.firebase_web_cert}
+    products = a=db.collection(u"product").get()
+    plist=[]
+    for p in products:
+        plist.append(p.to_dict())
+    return {"TossClientKey":storeconfig.TossClientKey,"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"firedata":storeconfig.firebase_web_cert,"plist":plist}
 
 @app.route('/login')
 @jinja.template('login.html')
