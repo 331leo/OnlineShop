@@ -11,6 +11,8 @@ store_title="YOUR STORE NAME"
 store_description="OpenGraph Discription FOR sns"
 store_logo="https://link/to/your/logo -> ex) imgur"
 
+TwitterApiKey="Bearer YOUR KEY"
+
 notice_site="Twitter: @username"
 
 naver_api_client_id="API CLIENT ID"

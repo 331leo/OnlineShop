@@ -135,9 +135,13 @@ async def route_verify_token(request):
         now=now.replace(tzinfo=pytz.UTC)
         td=now-token_time
         print(td.seconds)
+        header={"Authorization":storeconfig.TwitterApiKey}
+        res=requests.get(f"https://api.twitter.com/2/users/{id}",headers=header).json()
         if td.seconds<2000:
             if doc['token'] == token:
-                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL']})
+                print(res)
+                print(res['data']['username'])
+                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL'],'usertag':res['data']['username']})
             else:
                 return json({"code": "3"})
         else:
@@ -224,7 +228,7 @@ async def payfail(request):
 
 @app.route('/test', methods = ['POST',"GET"])
 async def testroute(request):
-    return response.text(request.ip)
+    return response.text(request.origin)
 
 @app.route('/ip', methods = ['POST',"GET"])
 async def iproute(request):
