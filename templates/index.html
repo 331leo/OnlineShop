@@ -119,10 +119,9 @@
 
     <div id="wrapper">
       <header id="header">
-        <div class="inner">
+        <div id="logobox" class="inner">
           <a href="index.html" class="logo">
-            <span
-              ><img src="{{store_logo}}" width="240" height="100" alt=""
+            <span><img src="{{store_logo}}" width="240" height="100" alt=""
             /></span>
           </a>
         </div>
@@ -350,6 +349,11 @@
         	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="" /></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="font-family: Cafe24Oneprettynight;">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
 
 
+        }
+        var logourl = "{{store_logo}}"
+        if (logourl.length < 2){
+            var div = document.getElementById("logobox")
+            div.style.display = "none";
         }
       </script>
 
