@@ -1,4 +1,5 @@
 #STORE SETTINGS
+default_oauth_provider="" #blank if none
 store_name="YOUR BRAND NAME"
 store_title="YOUR STORE NAME"
 store_description="OpenGraph Discription FOR sns"
