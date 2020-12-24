@@ -40,7 +40,7 @@ Session(app)
 jinja = SanicJinja2(app)
 app.static('/assets', './assets')
 
-baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description,"OauthProvider":storeconfig.OauthProvider}
+baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description}
 
 
 @app.route('/')
@@ -58,36 +58,40 @@ async def route_shop(request):
     rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site})
     return rdict
 
-if storeconfig.OauthProvider == "Twitter":
-    @app.route('/login')
-    @jinja.template('login.twitter.html')
-    async def route_login(request):
+@app.route('/login')
+async def route_login(request):
+    a = '"/twitter"'
+    b = '"/discord"'
+    return response.html(f"<button onclick='window.location.href = window.location + {a}'>twitter login</button><br><button onclick='window.location.href=window.location + {b}'>discord login</button>")
 
-        rdict=baserdict
-        rdict.update({"data": storeconfig.firebase_web_cert})
-        return rdict
-if storeconfig.OauthProvider == "Discord":
-    @app.route('/login')
-    async def route_login(request):
-        try:
-            OauthCode = request.args['code'][0]
-            print(OauthCode)
-            baseurl="https://discord.com/api/oauth2/token"
-            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-            data = {
-                'client_id': storeconfig.DiscordCilentID,
-                'client_secret': storeconfig.DiscordSecret,
-                'grant_type': 'authorization_code',
-                'code': OauthCode,
-                'redirect_uri': f"https://{storeconfig.site_url}/login",
-                'scope': 'identify email'
-            }
-            res=requests.post(baseurl,headers=headers,data=data)
-            print(res.json())
-            return response.redirect(f"https://{storeconfig.site_url}/tokenlogin?token={res.json()['access_token']}")
-        except:
-            discordOauthUrl=f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin&response_type=code&scope=identify%20email"
-            return response.redirect(discordOauthUrl)
+@app.route('/login/twitter')
+@jinja.template('login.twitter.html')
+async def route_login_twitter(request):
+    rdict=baserdict
+    rdict.update({"data": storeconfig.firebase_web_cert})
+    return rdict
+
+@app.route('/login/discord')
+async def route_login_discord(request):
+    try:
+        OauthCode = request.args['code'][0]
+        print(OauthCode)
+        baseurl="https://discord.com/api/oauth2/token"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        data = {
+            'client_id': storeconfig.DiscordCilentID,
+            'client_secret': storeconfig.DiscordSecret,
+            'grant_type': 'authorization_code',
+            'code': OauthCode,
+            'redirect_uri': f"https://{storeconfig.site_url}/login",
+            'scope': 'identify email'
+        }
+        res=requests.post(baseurl,headers=headers,data=data)
+        print(res.json())
+        return response.redirect(f"https://{storeconfig.site_url}/tokenlogin?token={res.json()['access_token']}&provider=discord")
+    except:
+        discordOauthUrl=f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin&response_type=code&scope=identify%20email"
+        return response.redirect(discordOauthUrl)
 
 
 
@@ -95,7 +99,8 @@ if storeconfig.OauthProvider == "Discord":
 
 @app.route("/tokenlogin",methods = ['GET','POST'])
 async def route_tokenlogin(request):
-    if storeconfig.OauthProvider == "Twitter":
+    provider=request.args['provider'][0]
+    if provider == "twitter":
         data = request.form
         userdata = mjson.loads(data['user'][0])[0]
         id=userdata['uid']
@@ -110,7 +115,7 @@ async def route_tokenlogin(request):
         ndata.update({"photoURL": userdata['photoURL']})
         ndata.update({"email":userdata['email']})
 
-    if storeconfig.OauthProvider == "Discord":
+    if provider == "discord":
         data = request.args
         access_token=data['token'][0]
         url = 'https://discord.com/api/users/@me'
@@ -122,6 +127,7 @@ async def route_tokenlogin(request):
         ndata.update({"photoURL": f"https://cdn.discordapp.com/avatars/{id}/{res['avatar']}.png?size=64"})
         ndata.update({"token": f"{id}-{access_token}"})
         ndata.update({"usertag": res['username']+"#"+res['discriminator']})
+    ndata.update({"OauthProvider":provider})
     ndata.update({"updatetime": datetime.datetime.utcnow()})
     print(id)
     print(ndata)
@@ -146,10 +152,9 @@ async def route_verify_token(request):
         td=now-token_time
         print(td.seconds)
 
-        usertag=doc['usertag']
         if td.seconds<2000:
             if doc['token'] == token:
-                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL'],'usertag':usertag})
+                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL'],'usertag':doc['usertag'],"OauthProvider":doc['OauthProvider']})
             else:
                 return json({"code": "3"})
         else:

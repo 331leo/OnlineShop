@@ -127,7 +127,7 @@
               secret: secret,
               user: JSON.stringify(pvdata),
             };
-            post_to_url(window.location.origin + "/tokenlogin", data);
+            post_to_url(window.location.origin + "/tokenlogin?provider=twitter", data);
             // ...
           } else {
             firebase.auth().signInWithRedirect(provider);
