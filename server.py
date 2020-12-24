@@ -15,6 +15,10 @@ from firebase_admin import firestore
 from sanic_session import Session
 from sanic_jinja2 import SanicJinja2
 import requests
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from gspread_formatting import *
+import sys
 
 
 #FireBase
@@ -23,7 +27,9 @@ firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-
+credentials = ServiceAccountCredentials.from_json_keyfile_name("firebasecert.json", ['https://spreadsheets.google.com/feeds'])
+gc = gspread.authorize(credentials)
+spreadsheet = gc.open_by_url(storeconfig.spreadsheet_url)
 
 #sms
 api_key = storeconfig.coolsms_api_key
@@ -42,7 +48,100 @@ app.static('/assets', './assets')
 
 baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description}
 
+def init_spreadsheet():
+    print("GET WORKSHEET")
+    try:
+        wsorders=spreadsheet.worksheet('Orders')
+    except:
+        wsorders=spreadsheet.add_worksheet(title="Orders", rows="1000", cols="10")
+    try:
+        wsproducts=spreadsheet.worksheet('Products')
+    except:
+        wsproducts=spreadsheet.add_worksheet(title="Products", rows="1000", cols="4")
+    print("FORMAT COLOR-ORDERS")
+    wsorders.format('A1:J1', {"backgroundColor": {
+      "red": 0.8,
+      "green": 1.0,
+      "blue": 1.0
+    },"horizontalAlignment": "CENTER",'textFormat': {'bold': True},"borders":{
+        "top":
+            {"style": "SOLID_MEDIUM"},
+        "bottom":
+            {"style": "SOLID_THICK"},
+        "left":
+            {"style": "SOLID_MEDIUM"},
+        "right":
+            {"style": "SOLID_MEDIUM"},
+    }})
+    print("FORMAT COLOR-PRODUCTS")
+    wsproducts.format('A1:D1', {"backgroundColor": {
+        "red": 1.0,
+        "green": 1.0,
+        "blue": 0.8
+    }, "horizontalAlignment": "CENTER", 'textFormat': {'bold': True},"borders":{
+        "top":
+            {"style": "SOLID_MEDIUM"},
+        "bottom":
+            {"style": "SOLID_THICK"},
+        "left":
+            {"style": "SOLID_MEDIUM"},
+        "right":
+            {"style": "SOLID_MEDIUM"}
+    }})
+    orders_header=['주문일시', '주문고유번호', '상품명', '가격', '주소', '이름', '핸드폰번호', '유저 태그', '유저ID', '영주증주소']
+    products_header=['상품명', '설명(개행<br>)', '이미지링크(543X543, Imgur)', '가격']
+    print("FORMAT WIDTHS-ORDERS")
+    set_column_width(wsorders, "A", 170)
+    set_column_width(wsorders, "B", 240)
+    set_column_width(wsorders, "C", 140)
+    set_column_width(wsorders, "D", 70)
+    set_column_width(wsorders, "E", 450)
+    set_column_width(wsorders, "F", 100)
+    set_column_width(wsorders, "G", 100)
+    set_column_width(wsorders, "H", 140)
+    set_column_width(wsorders, "I", 180)
+    set_column_width(wsorders, "J", 1000)
+    print("FORMAT DATETIME-ORDERS")
+    wsorders.format("A1:A1000",{
+        "numberFormat":{
+            "type": "DATE_TIME"
+        }
+    })
+    print("FORMAT NUMTEXT-ORDERS")
+    wsorders.format("G1:G1000",{
+        "numberFormat":{
+            "type": "TEXT"
+        }
+    })
+    print("FORMAT ALIGNCENTER-ORDERS")
+    wsorders.format("A1:J1000",{
+        "horizontalAlignment":"CENTER"
+    })
+    print("FORMAT ALIGNCENTER-PRODUCTS")
+    wsproducts.format("A1:D1000", {
+        "horizontalAlignment": "CENTER"
+    })
+    print("FORMAT COLUMN-PRODUCTS")
+    set_column_width(wsproducts, "A", 120)
+    set_column_width(wsproducts, "B", 430)
+    set_column_width(wsproducts, "C", 230)
+    set_column_width(wsproducts, "D", 70)
+    print("INPUT TEXTS-ORDERS")
+    wsorders.update('A1:J1', [orders_header])
+    print("INPUT TEXTS-PRODUCTS")
+    wsproducts.update('A1:D1', [products_header])
 
+
+try:
+    opt=sys.argv[1]
+    if opt == "init":
+        init_spreadsheet()
+        print("finish")
+except:
+    pass
+
+wsorders=spreadsheet.worksheet('Orders')
+wsproducts=spreadsheet.worksheet('Products')
 @app.route('/')
 async def login(request):
     return response.redirect(f"/login/{storeconfig.default_oauth_provider}")
@@ -50,7 +149,7 @@ async def login(request):
 @app.route('/shop')
 @jinja.template('index.html')
 async def route_shop(request):
-    products = a=db.collection(u"product").get()
+    products = a=db.collection(u"products").get()
     plist=[]
     for p in products:
         plist.append(p.to_dict())
@@ -183,7 +282,7 @@ async def buying(request):
     day=str(now)[2:19].replace("-","").replace(" ","").replace(":","")
     order_num=f"{id}_{day}"
 
-    doc_ref = db.collection(u"product").document(f"{prodcode}")
+    doc_ref = db.collection(u"products").document(f"{prodcode}")
     doc = doc_ref.get()
     doc = doc.to_dict()
     prodname=doc['name']
@@ -230,10 +329,19 @@ async def payproceed(request):
             doc_ref = db.collection(u"orders").document(f"{orderid}")
             doc = doc_ref.get()
             d = doc.to_dict()
+            try:
+                apiheader = {"X-Naver-Client-Id": storeconfig.naver_api_client_id,
+                             "X-Naver-Client-Secret": storeconfig.naver_api_secret}
+                res = requests.get("https://openapi.naver.com/v1/util/shorturl", headers=apiheader,
+                                   params={"url": receiptUrl})
+                receiptUrl = res.json()['result']['url']
+            except:
+                pass
             d.update({"paid":True,"receiptUrl":receiptUrl,"didsms":False})
             doc_ref.set(d)
             doc_ref = db.collection(u"paid_orders").document(f"{orderid}")
             doc_ref.set(d)
+            wsorders.append_row([datetime.datetime.now().timestamp(),orderid,d['prodname'],d['price'],d['address'],d['name'],d['phonenum'],d['usertag'],d['id'],receiptUrl])
             return redirect(f"/success?orderid={orderid}")
         else:
             return json(res.json())
@@ -268,10 +376,8 @@ async def success(request):
 
     params['to'] = d['phonenum']
     receipturl=d["receiptUrl"]
-    apiheader = {"X-Naver-Client-Id": storeconfig.naver_api_client_id,"X-Naver-Client-Secret": storeconfig.naver_api_secret}
-    res=requests.get("https://openapi.naver.com/v1/util/shorturl",headers=apiheader,params={"url":receipturl})
-    shortUrl=res.json()['result']['url']
-    params['text'] = f'[{storeconfig.store_name}] 주문이 완료되었습니다!\n{st}영수증: {shortUrl}\n'
+
+    params['text'] = f'[{storeconfig.store_name}] 주문이 완료되었습니다!\n{st}영수증: {receipturl}\n'
     try:
         if not d['didsms']:
             cool.send(params)
@@ -281,13 +387,27 @@ async def success(request):
         return rdict
     return rdict
 
+@app.route("/resetprodut", methods=['DELETE'])
+async def reset_products(request):
+    if request.headers['user-agent'] == "RemoveProducts":
+        alldoc=db.collection("products").get()
+        for doc in alldoc:
+            doc=db.collection("products").document(doc.id)
+            doc.delete()
+        return json({"code":"REMOVE_OK"})
+    else:
+        return json({"code": "REMOVE_FAIL"})
+
 @app.route('/view', methods = ['POST',"GET"])
 async def testroute(request):
     return response.redirect("https://docs.google.com/spreadsheets/d/1bGP3Hp8nRn3H7uv3hCaAYbJb85fqnR_Ueni6fhSssJU/edit?usp=sharing")
 
-@app.route('/ip', methods = ['POST',"GET"])
-async def iproute(request):
-    return response.text(request.ip)
+@app.route('/test', methods = ['POST',"GET","DELETE"])
+async def testroute(request):
+    a=request.headers
+    print(a)
+
+    return json({"code":a['user-agent']})
 
 
 

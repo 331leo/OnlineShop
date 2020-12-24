@@ -8,6 +8,9 @@ notice_site="Twitter: @username"
 site_port=443
 site_url="shop.example.com"
 
+#GOOGLE SPREADSHEET
+spreadsheet_url="https://docs.google.com/spreadsheets/d/YOUR_OWN_SPREADSHEET_URL/edit?usp=sharing"
+
 #CREDENTIALS
 TossClientKey = "TOSS API KEY"
 TossSecretKey= "TOSS SECRET KEY"
