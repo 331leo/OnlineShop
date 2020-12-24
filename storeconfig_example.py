@@ -1,5 +1,4 @@
 #STORE SETTINGS
-OauthProvider="Twitter" #Discord... ETC
 store_name="YOUR BRAND NAME"
 store_title="YOUR STORE NAME"
 store_description="OpenGraph Discription FOR sns"
@@ -17,11 +16,11 @@ coolsms_api_key = "COOLSMS API KEY"
 coolsms_api_secret = "COOLSMS API SECRET"
 coolsms_api_number = "COOLSMS PHONENUM"
 
-#ONLY IF TWITTER
+#For Twitter Login
 TwitterApiKey="Bearer YOUR KEY"
 
-#ONLY IF DISCORD
-DiscordCilentID = 01234567891234
+#For Discord Login
+DiscordCilentID = "1234567891234"
 DiscordSecret="Client Secret From discord"
 
 naver_api_client_id="API CLIENT ID"
