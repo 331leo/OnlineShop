@@ -42,6 +42,7 @@ app.static('/assets', './assets')
 
 baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description,"OauthProvider":storeconfig.OauthProvider}
 
+
 @app.route('/')
 async def login(request):
     return response.redirect("/login")
@@ -57,65 +58,71 @@ async def route_shop(request):
     rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site})
     return rdict
 
-@app.route('/login')
-@jinja.template('login.html')
-async def route_login(request):
-    rdict=baserdict
-    rdict.update({"data": storeconfig.firebase_web_cert})
-    return rdict
+if storeconfig.OauthProvider == "Twitter":
+    @app.route('/login')
+    @jinja.template('login.twitter.html')
+    async def route_login(request):
 
-
-@app.route('/success')
-@jinja.template('success.html')
-async def success(request):
-    try:
-        data=request.args
-        orderid=data['orderid'][0]
-        doc_ref = db.collection(u"orders").document(f"{orderid}")
-        doc = doc_ref.get()
-        d = doc.to_dict()
         rdict=baserdict
-        if d['paid'] == False:
-            rdict.update({"text": "주문이 완료되지 않았습니다."})
-            return rdict
-    except Exception as e:
-        rdict.update({"text": "올바르지 않은 접근입니다."})
+        rdict.update({"data": storeconfig.firebase_web_cert})
         return rdict
-    st=f"결제계정: @{d['usertag']}\n주문번호: {orderid}\n주문상품: {d['prodname']}\n가격: KRW {d['price']}\n배송: {d['address']}\n"
-    rdict.update({"text": f"결제계정: @{d['usertag']}<br>주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: KRW {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
+if storeconfig.OauthProvider == "Discord":
+    @app.route('/login')
+    async def route_login(request):
+        try:
+            OauthCode = request.args['code'][0]
+            print(OauthCode)
+            baseurl="https://discord.com/api/oauth2/token"
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            data = {
+                'client_id': storeconfig.DiscordCilentID,
+                'client_secret': storeconfig.DiscordSecret,
+                'grant_type': 'authorization_code',
+                'code': OauthCode,
+                'redirect_uri': f"https://{storeconfig.site_url}/login",
+                'scope': 'identify email'
+            }
+            res=requests.post(baseurl,headers=headers,data=data)
+            print(res.json())
+            return response.redirect(f"https://{storeconfig.site_url}/tokenlogin?token={res.json()['access_token']}")
+        except:
+            discordOauthUrl=f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin&response_type=code&scope=identify%20email"
+            return response.redirect(discordOauthUrl)
 
-    params['to'] = d['phonenum']
-    receipturl=d["receiptUrl"]
-    apiheader = {"X-Naver-Client-Id": storeconfig.naver_api_client_id,"X-Naver-Client-Secret": storeconfig.naver_api_secret}
-    res=requests.get("https://openapi.naver.com/v1/util/shorturl",headers=apiheader,params={"url":receipturl})
-    shortUrl=res.json()['result']['url']
-    params['text'] = f'[{storeconfig.store_name}] 주문이 완료되었습니다!\n{st}영수증: {shortUrl}\n'
-    try:
-        if not d['didsms']:
-            cool.send(params)
-            d.update({"didsms": True})
-            doc_ref.set(d)
-    except CoolsmsException as e:
-        return rdict
-    return rdict
 
 
-@app.route("/tokenlogin",methods = ['POST'])
+
+
+@app.route("/tokenlogin",methods = ['GET','POST'])
 async def route_tokenlogin(request):
+    if storeconfig.OauthProvider == "Twitter":
+        data = request.form
+        userdata = mjson.loads(data['user'][0])[0]
+        id=userdata['uid']
+        usertag = requests.get(f"https://api.twitter.com/2/users/{id}", headers={"Authorization": storeconfig.TwitterApiKey}).json()['data']['username']
+        ndata = {}
 
-    data = request.form
-    userdata = mjson.loads(data['user'][0])[0]
-    id=userdata['uid']
-    header = {"Authorization": storeconfig.TwitterApiKey}
-    usertag = requests.get(f"https://api.twitter.com/2/users/{id}", headers=header).json()['data']['username']
-    ndata={}
-    ndata.update({"token":data['token'][0]})
-    ndata.update({"secret":data['secret'][0]})
-    ndata.update({"displayname":userdata['displayName']})
-    ndata.update({"photoURL": userdata['photoURL']})
-    ndata.update({"email":userdata['email']})
-    ndata.update({"updatetime":datetime.datetime.utcnow()})
-    ndata.update({"usertag": usertag})
+        ndata.update({"usertag": "@" + usertag})
+
+        ndata.update({"token":data['token'][0]})
+        ndata.update({"secret":data['secret'][0]})
+        ndata.update({"displayname":userdata['displayName']})
+        ndata.update({"photoURL": userdata['photoURL']})
+        ndata.update({"email":userdata['email']})
+
+    if storeconfig.OauthProvider == "Discord":
+        data = request.args
+        access_token=data['token'][0]
+        url = 'https://discord.com/api/users/@me'
+        res=requests.get(url, headers={"Authorization": f"Bearer {access_token}"}).json()
+        id=res['id']
+        ndata = {}
+        ndata.update({"displayname": res['username']})
+        ndata.update({"email": res['email']})
+        ndata.update({"photoURL": f"https://cdn.discordapp.com/avatars/{id}/{res['avatar']}.png?size=64"})
+        ndata.update({"token": f"{id}-{access_token}"})
+        ndata.update({"usertag": res['username']+"#"+res['discriminator']})
+    ndata.update({"updatetime": datetime.datetime.utcnow()})
     print(id)
     print(ndata)
     dbdoc = db.collection(f"users").document(f"{id}")
@@ -235,10 +242,43 @@ async def payproceed(request):
 async def payfail(request):
     return json({"ERROR":"알수없는에러, 문의바랍니다."})
 
+@app.route('/success')
+@jinja.template('success.html')
+async def success(request):
+    try:
+        data=request.args
+        orderid=data['orderid'][0]
+        doc_ref = db.collection(u"orders").document(f"{orderid}")
+        doc = doc_ref.get()
+        d = doc.to_dict()
+        rdict=baserdict
+        if d['paid'] == False:
+            rdict.update({"text": "주문이 완료되지 않았습니다."})
+            return rdict
+    except Exception as e:
+        rdict.update({"text": "올바르지 않은 접근입니다."})
+        return rdict
+    st=f"결제계정: {d['usertag']}\n주문번호: {orderid}\n주문상품: {d['prodname']}\n가격: KRW {d['price']}\n배송: {d['address']}\n"
+    rdict.update({"text": f"결제계정: {d['usertag']}<br>주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: KRW {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
+
+    params['to'] = d['phonenum']
+    receipturl=d["receiptUrl"]
+    apiheader = {"X-Naver-Client-Id": storeconfig.naver_api_client_id,"X-Naver-Client-Secret": storeconfig.naver_api_secret}
+    res=requests.get("https://openapi.naver.com/v1/util/shorturl",headers=apiheader,params={"url":receipturl})
+    shortUrl=res.json()['result']['url']
+    params['text'] = f'[{storeconfig.store_name}] 주문이 완료되었습니다!\n{st}영수증: {shortUrl}\n'
+    try:
+        if not d['didsms']:
+            cool.send(params)
+            d.update({"didsms": True})
+            doc_ref.set(d)
+    except CoolsmsException as e:
+        return rdict
+    return rdict
 
 @app.route('/test', methods = ['POST',"GET"])
 async def testroute(request):
-    return response.text(request.origin)
+    return response.redirect("https://docs.google.com/spreadsheets/d/1bGP3Hp8nRn3H7uv3hCaAYbJb85fqnR_Ueni6fhSssJU/edit?usp=sharing")
 
 @app.route('/ip', methods = ['POST',"GET"])
 async def iproute(request):
@@ -248,4 +288,4 @@ async def iproute(request):
 
 if __name__ == "__main__":
     ssl_context ={"cert":"./cert/fullchain.pem",'key': "./cert/privkey.pem"}
-    app.run(host='0.0.0.0',port=443,ssl=ssl_context,debug=True)
+    app.run(host='0.0.0.0',port=storeconfig.site_port,ssl=ssl_context,debug=True)

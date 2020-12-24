@@ -97,13 +97,12 @@
           : decodeURIComponent(results[1].replace(/\+/g, " "));
       }
       function post_to_url(path, params, method) {
-        method = method || "post"; // 전송 방식 기본값을 POST로
+        method = method || "post";
 
         var form = document.createElement("form");
         form.setAttribute("method", method);
         form.setAttribute("action", path);
 
-        //히든으로 값을 주입시킨다.
         for (var key in params) {
           var hiddenField = document.createElement("input");
           hiddenField.setAttribute("type", "hidden");
@@ -125,7 +124,6 @@
             <span
               ><img src="{{store_logo}}" width="240" height="100" alt=""
             /></span>
-            <!--p><-본인 로고 집어넣으쇼</p-->
           </a>
         </div>
       </header>
@@ -150,12 +148,12 @@
             </h1>
             <div id="userinfo">
               <img class="circle" src="" id="profilepic" />
-              Twitter: @{{usertag}}
+
             </div>
           </header>
 
           <script>
-            var usertag = "{{usertag}}";
+
             function TossPay(orderid, amount, ordername, customerName) {
               tossPayments.requestPayment("카드", {
                 amount: amount,
@@ -190,7 +188,7 @@
                     '<img class="circle" src="" id="profilepic"/>' +
                     nickname +
                     "님 반갑습니다.<br>" +
-                    "{{OauthProvider}}: @" +
+                    "{{OauthProvider}}: " +
                     usertag +
                     "로 로그인됨";
                   document.getElementById("profilepic").src = photoURL;
