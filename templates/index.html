@@ -123,11 +123,7 @@
         <div class="inner">
           <a href="index.html" class="logo">
             <span
-              ><img
-                src="{{store_logo}}"
-                width="240"
-                height="100"
-                alt=""
+              ><img src="{{store_logo}}" width="240" height="100" alt=""
             /></span>
             <!--p><-본인 로고 집어넣으쇼</p-->
           </a>
@@ -141,12 +137,17 @@
           border-radius: 50%;
           position: static;
         }
+        button{
+		font-family: 'MaplestoryOTFLight';
+	    }
       </style>
 
       <div id="main">
         <div class="inner">
           <header>
-            <h1 style="font-family: Cafe24Oneprettynight;">{{store_title}}<br /></h1>
+            <h1 style="font-family: Cafe24Oneprettynight">
+              {{store_title}}<br />
+            </h1>
             <div id="userinfo">
               <img class="circle" src="" id="profilepic" />
               Twitter: @{{usertag}}
@@ -154,12 +155,13 @@
           </header>
 
           <script>
-            var usertag = "{{usertag}}"
-            function TossPay(orderid, amount, ordername) {
+            var usertag = "{{usertag}}";
+            function TossPay(orderid, amount, ordername, customerName) {
               tossPayments.requestPayment("카드", {
                 amount: amount,
                 orderId: orderid,
                 orderName: ordername,
+                customerName: customerName,
                 successUrl: window.location.origin + "/payproceed",
                 failUrl: window.location.origin + "/payfail",
               });
@@ -179,16 +181,18 @@
                 if (code == 0) {
                   var photoURL = data["photoURL"];
                   var nickname = data["nickname"];
-                  var usertag = data['usertag'];
+                  var usertag = data["usertag"];
                   console.log(photoURL);
                   console.log(nickname);
-                  console.log(usertag)
+                  console.log(usertag);
                   window.nickname = nickname;
                   document.getElementById("userinfo").innerHTML =
                     '<img class="circle" src="" id="profilepic"/>' +
                     nickname +
                     "님 반갑습니다.<br>" +
-                    "Twitter: @"+usertag+"로 로그인됨";
+                    "{{OauthProvider}}: @" +
+                    usertag +
+                    "로 로그인됨";
                   document.getElementById("profilepic").src = photoURL;
                 } else {
                   window.location.href = window.location.origin + "/";
@@ -221,7 +225,7 @@
                       swal({
                         title: "상세주소",
                         text:
-                          "아파트 동/호 등의 상세주소를 입력해 주세요.\n해당사항이 없을 경우 빈칸으로 제출해주세요.",
+                          data['address']+" ("+data['buildingName']+")"+"\n아파트 동/호 등의 상세주소를 입력해 주세요.\n해당사항이 없을 경우 빈칸으로 제출해주세요.",
                         icon: "info",
                         buttons: {
                           confirm: "다음",
@@ -237,6 +241,29 @@
                         closeOnEsc: false,
                       }).then((value) => {
                         var detailadd = value;
+                        swal({
+                        title: "이름",
+                        text:
+                          "배송시 주문자명으로 들어갈 이름입니다.(택배상자)\n실명 또는 닉네임을 적어주세요!",
+                        icon: "info",
+                        buttons: {
+                          confirm: "다음",
+                        },
+                        content: {
+                          element: "input",
+                          attributes: {
+                            placeholder: "홍길동",
+                            type: "text",
+                          },
+                        },
+                        closeOnClickOutside: false,
+                        closeOnEsc: false,
+                      }).then((value) => {
+                        var realname=value;
+                        if (realname.length < 2)
+                        {
+                          realname = nickname;
+                        }
                         swal({
                           title: "전화번호",
                           text:
@@ -265,6 +292,7 @@
                             itemcode: prodcode,
                             phonenum: phonenum,
                             prodcode: prodcode,
+                            realname: realname,
                           };
                           console.log(address);
                           $.post(
@@ -276,12 +304,15 @@
                               TossPay(
                                 data["order_num"],
                                 data["price"],
-                                data["prodname"]
+                                data["prodname"],
+                                realname
                               );
                             },
                             "json"
                           );
                         });
+                        });
+
                       });
                     },
                   }).open();
@@ -340,7 +371,7 @@
         </style>
         <div class="inner">
           <section>
-            <h2 style="font-family: Cafe24Oneprettynight;">Links</h2>
+            <h2 style="font-family: Cafe24Oneprettynight">Links</h2>
             <ul class="icons">
               <li>
                 <a
@@ -359,7 +390,7 @@
             </ul>
           </section>
           <ul class="copyright">
-            <li style="font-family: Cafe24Oneprettynight;">
+            <li style="font-family: Cafe24Oneprettynight">
               &copy; Copyright(C).2020 {{store_name}}., All rights reserved
             </li>
           </ul>
