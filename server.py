@@ -45,7 +45,7 @@ baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_t
 
 @app.route('/')
 async def login(request):
-    return response.redirect("/login")
+    return response.redirect(f"/login/{storeconfig.default_oauth_provider}")
 
 @app.route('/shop')
 @jinja.template('index.html')
@@ -83,14 +83,14 @@ async def route_login_discord(request):
             'client_secret': storeconfig.DiscordSecret,
             'grant_type': 'authorization_code',
             'code': OauthCode,
-            'redirect_uri': f"https://{storeconfig.site_url}/login",
+            'redirect_uri': f"https://{storeconfig.site_url}/login/discord",
             'scope': 'identify email'
         }
         res=requests.post(baseurl,headers=headers,data=data)
         print(res.json())
         return response.redirect(f"https://{storeconfig.site_url}/tokenlogin?token={res.json()['access_token']}&provider=discord")
     except:
-        discordOauthUrl=f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin&response_type=code&scope=identify%20email"
+        discordOauthUrl=f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin%2Fdiscord&response_type=code&scope=identify%20email"
         return response.redirect(discordOauthUrl)
 
 
@@ -124,7 +124,7 @@ async def route_tokenlogin(request):
         ndata = {}
         ndata.update({"displayname": res['username']})
         ndata.update({"email": res['email']})
-        ndata.update({"photoURL": f"https://cdn.discordapp.com/avatars/{id}/{res['avatar']}.png?size=64"})
+        ndata.update({"photoURL": f"https://cdn.discordapp.com/avatars/{id}/{res['avatar']}.png?size=48"})
         ndata.update({"token": f"{id}-{access_token}"})
         ndata.update({"usertag": res['username']+"#"+res['discriminator']})
     ndata.update({"OauthProvider":provider})
@@ -281,7 +281,7 @@ async def success(request):
         return rdict
     return rdict
 
-@app.route('/test', methods = ['POST',"GET"])
+@app.route('/view', methods = ['POST',"GET"])
 async def testroute(request):
     return response.redirect("https://docs.google.com/spreadsheets/d/1bGP3Hp8nRn3H7uv3hCaAYbJb85fqnR_Ueni6fhSssJU/edit?usp=sharing")
 
