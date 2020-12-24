@@ -40,7 +40,7 @@ Session(app)
 jinja = SanicJinja2(app)
 app.static('/assets', './assets')
 
-baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description}
+baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description,"OauthProvider":storeconfig.OauthProvider}
 
 @app.route('/')
 async def login(request):
@@ -81,8 +81,8 @@ async def success(request):
     except Exception as e:
         rdict.update({"text": "올바르지 않은 접근입니다."})
         return rdict
-    st=f"주문번호: {orderid}\n주문상품: {d['prodname']}\n가격: {d['price']}\n배송: {d['address']}\n"
-    rdict.update({"text": f"주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
+    st=f"결제계정: @{d['usertag']}\n주문번호: {orderid}\n주문상품: {d['prodname']}\n가격: KRW {d['price']}\n배송: {d['address']}\n"
+    rdict.update({"text": f"결제계정: @{d['usertag']}<br>주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: KRW {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
 
     params['to'] = d['phonenum']
     receipturl=d["receiptUrl"]
@@ -106,6 +106,8 @@ async def route_tokenlogin(request):
     data = request.form
     userdata = mjson.loads(data['user'][0])[0]
     id=userdata['uid']
+    header = {"Authorization": storeconfig.TwitterApiKey}
+    usertag = requests.get(f"https://api.twitter.com/2/users/{id}", headers=header).json()['data']['username']
     ndata={}
     ndata.update({"token":data['token'][0]})
     ndata.update({"secret":data['secret'][0]})
@@ -113,6 +115,7 @@ async def route_tokenlogin(request):
     ndata.update({"photoURL": userdata['photoURL']})
     ndata.update({"email":userdata['email']})
     ndata.update({"updatetime":datetime.datetime.utcnow()})
+    ndata.update({"usertag": usertag})
     print(id)
     print(ndata)
     dbdoc = db.collection(f"users").document(f"{id}")
@@ -135,13 +138,11 @@ async def route_verify_token(request):
         now=now.replace(tzinfo=pytz.UTC)
         td=now-token_time
         print(td.seconds)
-        header={"Authorization":storeconfig.TwitterApiKey}
-        res=requests.get(f"https://api.twitter.com/2/users/{id}",headers=header).json()
+
+        usertag=doc['usertag']
         if td.seconds<2000:
             if doc['token'] == token:
-                print(res)
-                print(res['data']['username'])
-                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL'],'usertag':res['data']['username']})
+                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL'],'usertag':usertag})
             else:
                 return json({"code": "3"})
         else:
@@ -162,6 +163,7 @@ async def buying(request):
     address = data['address'][0]
     building = data['building'][0]
     detail = data['detail'][0]
+    realname = data['realname'][0]
     finaladdress=f"{address} {detail} ({building}), {postalcode}"
 
     now = datetime.datetime.utcnow()
@@ -175,9 +177,15 @@ async def buying(request):
     prodname=doc['name']
     price=doc['price']
 
+    doc_ref = db.collection(u"users").document(f"{id}")
+    doc = doc_ref.get()
+    doc = doc.to_dict()
+    displayname = doc['displayname']
+    usertag = doc['usertag']
 
 
-    d={"address":finaladdress,"id":id,"prodcode":prodcode,"prodname":prodname,"price":price,"paid":False,"phonenum":phonenum}
+
+    d={"address":finaladdress,"id":id,"prodcode":prodcode,"prodname":prodname,"price":price,"paid":False,"phonenum":phonenum, "displayname":displayname, "name":realname, "usertag":usertag}
     dbdoc = db.collection(f"orders").document(f"{order_num}")
     dbdoc.set(d)
     d.update({"order_num":order_num})
@@ -211,6 +219,8 @@ async def payproceed(request):
             doc = doc_ref.get()
             d = doc.to_dict()
             d.update({"paid":True,"receiptUrl":receiptUrl,"didsms":False})
+            doc_ref.set(d)
+            doc_ref = db.collection(u"paid_orders").document(f"{orderid}")
             doc_ref.set(d)
             return redirect(f"/success?orderid={orderid}")
         else:

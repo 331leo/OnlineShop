@@ -1,3 +1,4 @@
+OauthProvider="Twitter" #Discord... ETC
 TossClientKey = "TOSS API KEY"
 TossSecretKey= "TOSS SECRET KEY"
 TossBasicAuthKey="BASE64 Encode Of secret key"
