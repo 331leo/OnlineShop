@@ -57,7 +57,7 @@ def init_spreadsheet():
     try:
         wsproducts=spreadsheet.worksheet('Products')
     except:
-        wsproducts=spreadsheet.add_worksheet(title="Products", rows="1000", cols="4")
+        wsproducts=spreadsheet.add_worksheet(title="Products", rows="1000", cols="5")
     print("FORMAT COLOR-ORDERS")
     wsorders.format('A1:J1', {"backgroundColor": {
       "red": 0.8,
@@ -74,7 +74,7 @@ def init_spreadsheet():
             {"style": "SOLID_MEDIUM"},
     }})
     print("FORMAT COLOR-PRODUCTS")
-    wsproducts.format('A1:D1', {"backgroundColor": {
+    wsproducts.format('A1:E1', {"backgroundColor": {
         "red": 1.0,
         "green": 1.0,
         "blue": 0.8
@@ -89,7 +89,7 @@ def init_spreadsheet():
             {"style": "SOLID_MEDIUM"}
     }})
     orders_header=['주문일시', '주문고유번호', '상품명', '가격', '주소', '이름', '핸드폰번호', '유저 태그', '유저ID', '영주증주소']
-    products_header=['상품명', '설명(개행<br>)', '이미지링크(543X543, Imgur)', '가격']
+    products_header=['상품명', '설명(개행<br>)', '이미지링크(543X543, Imgur)', '가격',"적용하려면 여기를 누르세요"]
     print("FORMAT WIDTHS-ORDERS")
     set_column_width(wsorders, "A", 170)
     set_column_width(wsorders, "B", 240)
@@ -100,7 +100,7 @@ def init_spreadsheet():
     set_column_width(wsorders, "G", 100)
     set_column_width(wsorders, "H", 140)
     set_column_width(wsorders, "I", 180)
-    set_column_width(wsorders, "J", 1000)
+    set_column_width(wsorders, "J", 180)
     print("FORMAT DATETIME-ORDERS")
     wsorders.format("A1:A1000",{
         "numberFormat":{
@@ -118,7 +118,7 @@ def init_spreadsheet():
         "horizontalAlignment":"CENTER"
     })
     print("FORMAT ALIGNCENTER-PRODUCTS")
-    wsproducts.format("A1:D1000", {
+    wsproducts.format("A1:E1000", {
         "horizontalAlignment": "CENTER"
     })
     print("FORMAT COLUMN-PRODUCTS")
@@ -126,10 +126,12 @@ def init_spreadsheet():
     set_column_width(wsproducts, "B", 430)
     set_column_width(wsproducts, "C", 230)
     set_column_width(wsproducts, "D", 70)
+    set_column_width(wsproducts, "E", 200)
     print("INPUT TEXTS-ORDERS")
     wsorders.update('A1:J1', [orders_header])
     print("INPUT TEXTS-PRODUCTS")
-    wsproducts.update('A1:D1', [products_header])
+    wsproducts.update('A1:E1', [products_header])
+    wsproducts.update('E2',"https://"+storeconfig.site_url+"/update")
 
 
 try:
@@ -154,7 +156,7 @@ async def route_shop(request):
     for p in products:
         plist.append(p.to_dict())
     rdict=baserdict
-    rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site})
+    rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site,"modtool_url":storeconfig.spreadsheet_url})
     return rdict
 
 @app.route('/login')
@@ -163,34 +165,35 @@ async def route_login(request):
     b = '"/discord"'
     return response.html(f"<button onclick='window.location.href = window.location + {a}'>twitter login</button><br><button onclick='window.location.href=window.location + {b}'>discord login</button>")
 
-@app.route('/login/twitter')
+@app.route('/login/<oauth_provider>')
 @jinja.template('login.twitter.html')
-async def route_login_twitter(request):
-    rdict=baserdict
-    rdict.update({"data": storeconfig.firebase_web_cert})
-    return rdict
+async def route_login_twitter(request,oauth_provider):
+    if oauth_provider == "twitter":
+        rdict=baserdict
+        rdict.update({"data": storeconfig.firebase_web_cert})
+        return rdict
+    elif oauth_provider == "discord":
+        try:
+            OauthCode = request.args['code'][0]
+            print(OauthCode)
+            baseurl = "https://discord.com/api/oauth2/token"
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            data = {
+                'client_id': storeconfig.DiscordCilentID,
+                'client_secret': storeconfig.DiscordSecret,
+                'grant_type': 'authorization_code',
+                'code': OauthCode,
+                'redirect_uri': f"https://{storeconfig.site_url}/login/discord",
+                'scope': 'identify email'
+            }
+            res = requests.post(baseurl, headers=headers, data=data)
+            print(res.json())
+            return response.redirect(
+                f"https://{storeconfig.site_url}/tokenlogin?token={res.json()['access_token']}&provider=discord")
+        except:
+            discordOauthUrl = f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin%2Fdiscord&response_type=code&scope=identify%20email"
+            return response.redirect(discordOauthUrl)
 
-@app.route('/login/discord')
-async def route_login_discord(request):
-    try:
-        OauthCode = request.args['code'][0]
-        print(OauthCode)
-        baseurl="https://discord.com/api/oauth2/token"
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        data = {
-            'client_id': storeconfig.DiscordCilentID,
-            'client_secret': storeconfig.DiscordSecret,
-            'grant_type': 'authorization_code',
-            'code': OauthCode,
-            'redirect_uri': f"https://{storeconfig.site_url}/login/discord",
-            'scope': 'identify email'
-        }
-        res=requests.post(baseurl,headers=headers,data=data)
-        print(res.json())
-        return response.redirect(f"https://{storeconfig.site_url}/tokenlogin?token={res.json()['access_token']}&provider=discord")
-    except:
-        discordOauthUrl=f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin%2Fdiscord&response_type=code&scope=identify%20email"
-        return response.redirect(discordOauthUrl)
 
 
 
@@ -253,7 +256,10 @@ async def route_verify_token(request):
 
         if td.seconds<2000:
             if doc['token'] == token:
-                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL'],'usertag':doc['usertag'],"OauthProvider":doc['OauthProvider']})
+                modtool = False
+                if int(id) in storeconfig.moderator_ids:
+                    modtool=True
+                return json({"code":"0","nickname":doc['displayname'],"photoURL":doc['photoURL'],'usertag':doc['usertag'],"OauthProvider":doc['OauthProvider'],"modtool":modtool})
             else:
                 return json({"code": "3"})
         else:
@@ -387,6 +393,19 @@ async def success(request):
         return rdict
     return rdict
 
+@app.route("/update")
+async def update_products(request):
+    plist=wsproducts.get_all_values()
+    plist.pop(0)
+    alldoc = db.collection("products").get()
+    for doc in alldoc:
+        doc = db.collection("products").document(doc.id)
+        doc.delete()
+    for i in range(len(plist)):
+        doc=db.collection("products").document(f"{i+1}")
+        product_dict={"name":plist[i][0],"content":plist[i][1],"imgsrc":plist[i][2],"price":plist[i][3]}
+        doc.set(product_dict)
+    return response.redirect("/shop")
 @app.route("/resetprodut", methods=['DELETE'])
 async def reset_products(request):
     if request.headers['user-agent'] == "RemoveProducts":
@@ -399,8 +418,9 @@ async def reset_products(request):
         return json({"code": "REMOVE_FAIL"})
 
 @app.route('/view', methods = ['POST',"GET"])
-async def testroute(request):
-    return response.redirect("https://docs.google.com/spreadsheets/d/1bGP3Hp8nRn3H7uv3hCaAYbJb85fqnR_Ueni6fhSssJU/edit?usp=sharing")
+async def viewroute(request,tag):
+
+    return response.redirect(storeconfig.spreadsheet_url)
 
 @app.route('/test', methods = ['POST',"GET","DELETE"])
 async def testroute(request):
