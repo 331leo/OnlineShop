@@ -179,18 +179,19 @@
                   var photoURL = data["photoURL"];
                   var nickname = data["nickname"];
                   var usertag = data["usertag"];
-                  var OauthProvider = data['OauthProvider']
+                  var OauthProvider = data['OauthProvider'];
+                  var ismod = data['modtool'];
+                  var modspecial=""
+                  if(ismod){
+                      var modspecial="<br><a href='{{modtool_url}}'>관리자 전용 페이지 바로가기</a>"
+                  }
                   console.log(photoURL);
                   console.log(nickname);
                   console.log(usertag);
                   window.nickname = nickname;
                   document.getElementById("userinfo").innerHTML =
-                    '<img class="circle" src="" id="profilepic"/>' +
-                    nickname +
-                    "님 반갑습니다.<br>" +
-                    OauthProvider+": "+
-                    usertag +
-                    "로 로그인됨";
+                    '<img class="circle" src="" id="profilepic"/>' + nickname + "님 반갑습니다.<br>" +
+                    OauthProvider+": "+ usertag + "로 로그인됨"+modspecial;
                   document.getElementById("profilepic").src = photoURL;
                 } else {
                   window.location.href = window.location.origin + "/";

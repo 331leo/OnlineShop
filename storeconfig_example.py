@@ -7,7 +7,7 @@ store_logo="https://link/to/your/logo -> ex) imgur"
 notice_site="Twitter: @username"
 site_port=443
 site_url="shop.example.com"
-
+moderator_ids=[1234324352234,]
 #GOOGLE SPREADSHEET
 spreadsheet_url="https://docs.google.com/spreadsheets/d/YOUR_OWN_SPREADSHEET_URL/edit?usp=sharing"
 
