@@ -3,6 +3,7 @@ import openpyxl
 import json as mjson
 from sanic import Sanic
 from sanic import response
+
 from sanic.response import json
 from sanic.response import redirect
 from sdk.api.message import Message
@@ -13,7 +14,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from sanic_session import Session
-from sanic_jinja2 import SanicJinja2
+import jinja2
 import requests
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -43,10 +44,11 @@ cool = Message(api_key, api_secret)
 app = Sanic (__name__)
 app.config['JSON_AS_ASCII'] = False
 Session(app)
-jinja = SanicJinja2(app)
 app.static('/assets', './assets')
 
 baserdict={"store_name":storeconfig.store_name,"store_title":storeconfig.store_title,"store_logo":storeconfig.store_logo,"store_description":storeconfig.store_description}
+
+templateEnv = jinja2.Environment( loader=jinja2.FileSystemLoader('templates/'))
 
 def init_spreadsheet():
     print("GET WORKSHEET")
@@ -149,7 +151,7 @@ async def login(request):
     return response.redirect(f"/login/{storeconfig.default_oauth_provider}")
 
 @app.route('/shop')
-@jinja.template('index.html')
+#@jinja.template('index.html')
 async def route_shop(request):
     products = a=db.collection(u"products").get()
     plist=[]
@@ -157,21 +159,25 @@ async def route_shop(request):
         plist.append(p.to_dict())
     rdict=baserdict
     rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site,"modtool_url":storeconfig.spreadsheet_url})
-    return rdict
+    template = templateEnv.get_template('index.html')
+    return response.html(template.render(rdict))
 
 @app.route('/login')
 async def route_login(request):
-    a = '"/twitter"'
-    b = '"/discord"'
-    return response.html(f"<button onclick='window.location.href = window.location + {a}'>twitter login</button><br><button onclick='window.location.href=window.location + {b}'>discord login</button>")
+    rdict = baserdict
+    rdict.update({"data": storeconfig.firebase_web_cert, "storeconfig": storeconfig})
+    template = templateEnv.get_template('login.test.html')
+    return response.html(template.render(rdict))
 
 @app.route('/login/<oauth_provider>')
-@jinja.template('login.twitter.html')
-async def route_login_twitter(request,oauth_provider):
+#@jinja.template('login.html')
+async def route_login_given_provider(request,oauth_provider):
     if oauth_provider == "twitter":
         rdict=baserdict
-        rdict.update({"data": storeconfig.firebase_web_cert})
-        return rdict
+        rdict.update({"data": storeconfig.firebase_web_cert,"storeconfig":storeconfig})
+        template = templateEnv.get_template('login.html')
+        return response.html(template.render(rdict))
+
     elif oauth_provider == "discord":
         try:
             OauthCode = request.args['code'][0]
@@ -202,20 +208,6 @@ async def route_login_twitter(request,oauth_provider):
 @app.route("/tokenlogin",methods = ['GET','POST'])
 async def route_tokenlogin(request):
     provider=request.args['provider'][0]
-    if provider == "twitter":
-        data = request.form
-        userdata = mjson.loads(data['user'][0])[0]
-        id=userdata['uid']
-        usertag = requests.get(f"https://api.twitter.com/2/users/{id}", headers={"Authorization": storeconfig.TwitterApiKey}).json()['data']['username']
-        ndata = {}
-
-        ndata.update({"usertag": "@" + usertag})
-
-        ndata.update({"token":data['token'][0]})
-        ndata.update({"secret":data['secret'][0]})
-        ndata.update({"displayname":userdata['displayName']})
-        ndata.update({"photoURL": userdata['photoURL']})
-        ndata.update({"email":userdata['email']})
 
     if provider == "discord":
         data = request.args
@@ -229,7 +221,32 @@ async def route_tokenlogin(request):
         ndata.update({"photoURL": f"https://cdn.discordapp.com/avatars/{id}/{res['avatar']}.png?size=48"})
         ndata.update({"token": f"{id}-{access_token}"})
         ndata.update({"usertag": res['username']+"#"+res['discriminator']})
-    ndata.update({"OauthProvider":provider})
+    elif provider == "twitter.com":
+        data = request.form
+        userdata = mjson.loads(data['user'][0])[0]
+        id=userdata['uid']
+        usertag = requests.get(f"https://api.twitter.com/2/users/{id}", headers={"Authorization": storeconfig.TwitterApiKey}).json()['data']['username']
+        ndata = {}
+
+        ndata.update({"usertag": "@" + usertag})
+
+        ndata.update({"token":data['token'][0]})
+        ndata.update({"secret":data['secret'][0]})
+        ndata.update({"displayname":userdata['displayName']})
+        ndata.update({"photoURL": userdata['photoURL']})
+        ndata.update({"email":userdata['email']})
+    else:
+        data = request.form
+
+        userdata = mjson.loads(data['user'][0])[0]
+        id=userdata['uid']
+        ndata = {}
+        ndata.update({"displayname": userdata['displayName']})
+        ndata.update({"email": userdata['email']})
+        ndata.update({"photoURL": f"{userdata['photoURL']}"})
+        ndata.update({"token": f"{id}-{data['token'][0]}"})
+        ndata.update({"usertag": userdata['displayName']})
+    ndata.update({"OauthProvider":provider.split(".")[0]})
     ndata.update({"updatetime": datetime.datetime.utcnow()})
     print(id)
     print(ndata)
@@ -362,21 +379,23 @@ async def payfail(request):
     return json({"ERROR":"알수없는에러, 문의바랍니다."})
 
 @app.route('/success')
-@jinja.template('success.html')
+#@jinja.template('success.html')
 async def success(request):
+    rdict = baserdict
     try:
         data=request.args
         orderid=data['orderid'][0]
         doc_ref = db.collection(u"orders").document(f"{orderid}")
         doc = doc_ref.get()
         d = doc.to_dict()
-        rdict=baserdict
         if d['paid'] == False:
             rdict.update({"text": "주문이 완료되지 않았습니다."})
-            return rdict
+            template = templateEnv.get_template('success.html')
+            return response.html(template.render(rdict))
     except Exception as e:
         rdict.update({"text": "올바르지 않은 접근입니다."})
-        return rdict
+        template = templateEnv.get_template('success.html')
+        return response.html(template.render(rdict))
     st=f"결제계정: {d['usertag']}\n주문번호: {orderid}\n주문상품: {d['prodname']}\n가격: KRW {d['price']}\n배송: {d['address']}\n"
     rdict.update({"text": f"결제계정: {d['usertag']}<br>주문번호: {orderid}<br>주문상품: {d['prodname']}<br>가격: KRW {d['price']}<br>배송: {d['address']}<br> 해당 내용을 주문시 적은 핸드폰으로 발송하였습니다!<br>주문해 주셔서 감사합니다!"})
 
@@ -390,8 +409,9 @@ async def success(request):
             d.update({"didsms": True})
             doc_ref.set(d)
     except CoolsmsException as e:
-        return rdict
-    return rdict
+        pass
+    template = templateEnv.get_template('success.html')
+    return response.html(template.render(rdict))
 
 @app.route("/update")
 async def update_products(request):
@@ -424,10 +444,10 @@ async def viewroute(request,tag):
 
 @app.route('/test', methods = ['POST',"GET","DELETE"])
 async def testroute(request):
-    a=request.headers
+    a=request.json
     print(a)
 
-    return json({"code":a['user-agent']})
+    return json({"json":a})
 
 
 

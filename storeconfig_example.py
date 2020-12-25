@@ -1,5 +1,5 @@
 #STORE SETTINGS
-default_oauth_provider="" #blank if none
+default_oauth_provider="" #blank -> selcet mode
 store_name="YOUR BRAND NAME"
 store_title="YOUR STORE NAME"
 store_description="OpenGraph Discription FOR sns"
@@ -8,6 +8,13 @@ notice_site="Twitter: @username"
 site_port=443
 site_url="shop.example.com"
 moderator_ids=[1234324352234,]
+
+#OauthProviders
+oauth_google = True
+oauth_twitter = True
+oauth_github = True
+oauth_facebook = True
+
 #GOOGLE SPREADSHEET
 spreadsheet_url="https://docs.google.com/spreadsheets/d/YOUR_OWN_SPREADSHEET_URL/edit?usp=sharing"
 
