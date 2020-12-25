@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="shortcut icon" href="assets/favicon.ico" />
+    <title>LOGIN: {{store_title}}</title>
+    <meta charset="utf-8" />
+    <meta property="og:image" content="{{store_logo}}" />
+    <meta property="og:description" content="{{store_description}}" />
+    <meta property="og:title" content="LOGIN: {{store_title}}" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"
+    />
+    <script src="../assets/js/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+				 https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-auth.js"></script>
+
+    <script>
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      var firebaseConfig = {
+        apiKey: "{{data['apiKey']}}",
+        authDomain: "{{data['authDomain']}}",
+        projectId: "{{data['projectId']}}",
+        storageBucket: "{{data['storageBucket']}}",
+        messagingSenderId: "{{data['messagingSenderId']}}",
+        appId: "{{data['appId']}}",
+        measurementId: "{{data['measurementId']}}",
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+      var provider = new firebase.auth.TwitterAuthProvider();
+    </script>
+    <script>
+      function post_to_url(path, params, method) {
+        method = method || "post"; // 전송 방식 기본값을 POST로
+
+        var form = document.createElement("form");
+        form.setAttribute("method", method);
+        form.setAttribute("action", path);
+
+        //히든으로 값을 주입시킨다.
+        for (var key in params) {
+          var hiddenField = document.createElement("input");
+          hiddenField.setAttribute("type", "hidden");
+          hiddenField.setAttribute("name", key);
+          hiddenField.setAttribute("value", params[key]);
+
+          form.appendChild(hiddenField);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+      }
+    </script>
+  </head>
+  <body>
+    <style>
+      .loader {
+        border: 16px solid #f3f3f3; /* Light grey */
+        border-top: 16px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: -70px;
+        margin-left: -70px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: 200px;
+        margin-left: -40px;
+        width: 120px;
+        height: 120px;
+      }
+    </style>
+
+    <script>
+      $(document).ready(function () {
+        //웹페이지가 로드가 완료 후에 해당 함수를 실행합니다.
+        console.log("Jquery Ready");
+      });
+      firebase
+        .auth()
+        .getRedirectResult()
+        .then(function (result) {
+          if (result.credential) {
+            // This gives you a the Twitter OAuth 1.0 Access Token and Secret.
+            // You can use these server side with your app's credentials to access the Twitter API.
+            var data = {};
+            var user = result.user;
+
+            var token = result.credential.accessToken;
+
+            var secret = result.credential.secret;
+
+            var pvdata = user.providerData;
+
+            console.log(token);
+
+            console.log(secret);
+
+            console.log(user);
+            console.log(pvdata[0]);
+            var data = {
+              token: token,
+              secret: secret,
+              user: JSON.stringify(pvdata),
+            };
+            post_to_url(window.location.origin + "/tokenlogin?provider=twitter", data);
+            // ...
+          } else {
+            firebase.auth().signInWithRedirect(provider);
+            document.write("redirecting...");
+          }
+          // The signed-in user info.
+        })
+        .catch(function (error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // The email of the user's account used.
+          var email = error.email;
+          // The firebase.auth.AuthCredential type that was used.
+          var credential = error.credential;
+          // ...
+        });
+    </script>
+    <div class="loader"></div>
+    <div class="center">로그인하는중..</div>
+  </body>
+</html>
