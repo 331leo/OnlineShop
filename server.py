@@ -166,7 +166,7 @@ async def route_shop(request):
 async def route_login(request):
     rdict = baserdict
     rdict.update({"data": storeconfig.firebase_web_cert, "storeconfig": storeconfig})
-    template = templateEnv.get_template('login.test.html')
+    template = templateEnv.get_template('login.select.html')
     return response.html(template.render(rdict))
 
 @app.route('/login/<oauth_provider>')

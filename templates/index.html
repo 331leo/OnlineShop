@@ -21,9 +21,9 @@
     <noscript
       ><link rel="stylesheet" href="../assets/css/noscript.css"
     /></noscript>
-
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-    <script src="../assets/js/jquery.min.js"></script>
+
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <link
       rel="stylesheet"
@@ -37,6 +37,7 @@
     <script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-auth.js"></script>
 
     <script>
+
         function profileresize(obj){
   obj.height = 48;
   obj.width = 48;
@@ -90,6 +91,12 @@
       $(document).ready(function () {
         //웹페이지가 로드가 완료 후에 해당 함수를 실행합니다.
         console.log("Jquery Ready");
+        window.onload=function() {
+            window.setTimeout(function() {
+				$('body').removeClass('is-preload');
+			}, 100);
+		};
+
       });
 
       function getParameterByName(name) {
@@ -414,11 +421,5 @@
       </footer>
     </div>
 
-    <script src="../assets/js/browser.min.js"></script>
-    <script src="../assets/js/breakpoints.min.js"></script>
-    <script src="../assets/js/util.js"></script>
-    <script src="../assets/js/main.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
   </body>
 </html>
