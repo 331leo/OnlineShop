@@ -316,12 +316,12 @@ async def buying(request):
     postalcode = data['postalcode'][0]
     address = data['address'][0]
     try:
-        building = data['building'][0]
+        building = f"({data['building'][0]})"
     except:
-        building = " "
+        building = ""
     detail = data['detail'][0]
     realname = data['realname'][0]
-    finaladdress=f"{address} {detail} ({building}), {postalcode}"
+    finaladdress=f"{address} {detail} {building}, {postalcode}"
 
     now = datetime.datetime.utcnow()
     now = now.replace(tzinfo=pytz.UTC)
