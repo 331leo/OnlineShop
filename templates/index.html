@@ -34,11 +34,6 @@
     <script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-auth.js"></script>
 
     <script>
-
-        function profileresize(obj){
-  obj.height = 48;
-  obj.width = 48;
-}
       // Your web app's Firebase configuration
       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
       var firebaseConfig = {
@@ -130,8 +125,8 @@
     <div id="wrapper">
       <header id="header">
         <div id="logobox" class="inner">
-          <a href="index.html" class="logo">
-            <span><img src="{{store_logo}}" width="240" height="100" alt=""
+          <a class="logo">
+            <span><img style="object-fit: contain;" src="{{store_logo}}" width=200em height=100em alt=""
             /></span>
           </a>
         </div>
@@ -201,14 +196,8 @@
                   window.nickname = nickname;
 
 
-
-
-
-                    a='javascript:fitImageSize(this, '+photoURL+', 48, 48)'
-
-
                   document.getElementById("userinfo").innerHTML =
-                    '<img class="circle" src="'+photoURL+'" onload="javascript:profileresize(this);" id="profilepic" />' + nickname + "님 반갑습니다.<br>" +
+                    '<img class="circle" src="'+photoURL+'" width="48px" height="48px" style="object-fit: cover" />' + nickname + "님 반갑습니다.<br>" +
                     OauthProvider+": "+ usertag + "로 로그인됨"+modspecial;
 
                 } else {
@@ -365,7 +354,7 @@
         	var numid=i+1
         	var boxid="box"+numid.toString()
         	var randstyle="style"+generateRandom(1,6).toString()
-        	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="" /></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="{{description_style}}">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
+        	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="IMAGE LOADING..." style="object-fit: cover"/></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="{{description_style}}">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
 
 
         }
