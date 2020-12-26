@@ -85,14 +85,14 @@
         if (browser.mobile)
 			$('body').addClass('is-touch');
         console.log("Jquery Ready");
+
+
+      });
         window.onload=function() {
             window.setTimeout(function() {
 				$('body').removeClass('is-preload');
 			}, 100);
 		};
-
-      });
-
       function getParameterByName(name) {
         name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
         var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
