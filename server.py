@@ -55,13 +55,13 @@ def init_spreadsheet():
     try:
         wsorders=spreadsheet.worksheet('Orders')
     except:
-        wsorders=spreadsheet.add_worksheet(title="Orders", rows="1000", cols="10")
+        wsorders=spreadsheet.add_worksheet(title="Orders", rows="1000", cols="11")
     try:
         wsproducts=spreadsheet.worksheet('Products')
     except:
         wsproducts=spreadsheet.add_worksheet(title="Products", rows="1000", cols="5")
     print("FORMAT COLOR-ORDERS")
-    wsorders.format('A1:J1', {"backgroundColor": {
+    wsorders.format('A1:K1', {"backgroundColor": {
       "red": 0.8,
       "green": 1.0,
       "blue": 1.0
@@ -90,7 +90,7 @@ def init_spreadsheet():
         "right":
             {"style": "SOLID_MEDIUM"}
     }})
-    orders_header=['주문일시', '주문고유번호', '상품명', '가격', '주소', '이름', '핸드폰번호', '유저 태그', '유저ID', '영주증주소']
+    orders_header=['주문일시', '주문고유번호', '상품명', '가격', '주소', '이름', '핸드폰번호', '로그인 방법','로그인 계정', '유저ID', '영주증주소']
     products_header=['상품명', '설명(개행<br>)', '이미지링크(543X543, Imgur)', '가격',"적용하려면 여기를 누르세요"]
     print("FORMAT WIDTHS-ORDERS")
     set_column_width(wsorders, "A", 170)
@@ -100,9 +100,10 @@ def init_spreadsheet():
     set_column_width(wsorders, "E", 450)
     set_column_width(wsorders, "F", 100)
     set_column_width(wsorders, "G", 100)
-    set_column_width(wsorders, "H", 140)
-    set_column_width(wsorders, "I", 180)
+    set_column_width(wsorders, "H", 100)
+    set_column_width(wsorders, "I", 140)
     set_column_width(wsorders, "J", 180)
+    set_column_width(wsorders, "K", 180)
     print("FORMAT DATETIME-ORDERS")
     wsorders.format("A1:A1000",{
         "numberFormat":{
@@ -116,7 +117,7 @@ def init_spreadsheet():
         }
     })
     print("FORMAT ALIGNCENTER-ORDERS")
-    wsorders.format("A1:J1000",{
+    wsorders.format("A1:K1000",{
         "horizontalAlignment":"CENTER"
     })
     print("FORMAT ALIGNCENTER-PRODUCTS")
@@ -130,7 +131,7 @@ def init_spreadsheet():
     set_column_width(wsproducts, "D", 70)
     set_column_width(wsproducts, "E", 200)
     print("INPUT TEXTS-ORDERS")
-    wsorders.update('A1:J1', [orders_header])
+    wsorders.update('A1:K1', [orders_header])
     print("INPUT TEXTS-PRODUCTS")
     wsproducts.update('A1:E1', [products_header])
     wsproducts.update('E2',"https://"+storeconfig.site_url+"/update")
@@ -158,7 +159,8 @@ async def route_shop(request):
     for p in products:
         plist.append(p.to_dict())
     rdict=baserdict
-    rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site,"modtool_url":storeconfig.spreadsheet_url})
+
+    rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site,"modtool_url":storeconfig.spreadsheet_url,"title_style":storeconfig.title_style,"description_style":storeconfig.description_style,"footer_style":storeconfig.footer_style,"footer_html":footer_html})
     template = templateEnv.get_template('index.html')
     return response.html(template.render(rdict))
 
@@ -218,7 +220,7 @@ async def route_tokenlogin(request):
         ndata = {}
         ndata.update({"displayname": res['username']})
         ndata.update({"email": res['email']})
-        ndata.update({"photoURL": f"https://cdn.discordapp.com/avatars/{id}/{res['avatar']}.png?size=48"})
+        ndata.update({"photoURL": f"https://cdn.discordapp.com/avatars/{id}/{res['avatar']}.png?size=64"})
         ndata.update({"token": f"{id}-{access_token}"})
         ndata.update({"usertag": res['username']+"#"+res['discriminator']})
     elif provider == "twitter.com":
@@ -316,10 +318,11 @@ async def buying(request):
     doc = doc.to_dict()
     displayname = doc['displayname']
     usertag = doc['usertag']
+    OauthProvider = doc['OauthProvider']
 
 
 
-    d={"address":finaladdress,"id":id,"prodcode":prodcode,"prodname":prodname,"price":price,"paid":False,"phonenum":phonenum, "displayname":displayname, "name":realname, "usertag":usertag}
+    d={"address":finaladdress,"id":id,"prodcode":prodcode,"prodname":prodname,"price":price,"paid":False,"phonenum":phonenum, "displayname":displayname, "name":realname, "usertag":usertag, "OauthProvider":OauthProvider}
     dbdoc = db.collection(f"orders").document(f"{order_num}")
     dbdoc.set(d)
     d.update({"order_num":order_num})
@@ -364,7 +367,8 @@ async def payproceed(request):
             doc_ref.set(d)
             doc_ref = db.collection(u"paid_orders").document(f"{orderid}")
             doc_ref.set(d)
-            wsorders.append_row([datetime.datetime.now().timestamp(),orderid,d['prodname'],d['price'],d['address'],d['name'],d['phonenum'],d['usertag'],d['id'],receiptUrl])
+            spreadsheet_time=datetime.datetime.now().timestamp() / 86400 + 365 * 70 + 19 + 9 / 24
+            wsorders.append_row([spreadsheet_time,orderid,d['prodname'],d['price'],d['address'],d['name'],d['phonenum'],d['OauthProvider'],d['usertag'],d['id'],receiptUrl])
             return redirect(f"/success?orderid={orderid}")
         else:
             return json(res.json())
@@ -426,21 +430,7 @@ async def update_products(request):
         product_dict={"name":plist[i][0],"content":plist[i][1],"imgsrc":plist[i][2],"price":plist[i][3]}
         doc.set(product_dict)
     return response.redirect("/shop")
-@app.route("/resetprodut", methods=['DELETE'])
-async def reset_products(request):
-    if request.headers['user-agent'] == "RemoveProducts":
-        alldoc=db.collection("products").get()
-        for doc in alldoc:
-            doc=db.collection("products").document(doc.id)
-            doc.delete()
-        return json({"code":"REMOVE_OK"})
-    else:
-        return json({"code": "REMOVE_FAIL"})
 
-@app.route('/view', methods = ['POST',"GET"])
-async def viewroute(request,tag):
-
-    return response.redirect(storeconfig.spreadsheet_url)
 
 @app.route('/test', methods = ['POST',"GET","DELETE"])
 async def testroute(request):
