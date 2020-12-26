@@ -91,7 +91,7 @@ def init_spreadsheet():
             {"style": "SOLID_MEDIUM"}
     }})
     orders_header=['주문일시', '주문고유번호', '상품명', '가격', '주소', '이름', '핸드폰번호', '로그인 방법','로그인 계정', '유저ID', '영주증주소']
-    products_header=['상품명', '설명(개행<br>)', '이미지링크(543X543, Imgur)', '가격',"적용하려면 여기를 누르세요"]
+    products_header=['상품명', '설명(개행<br>)', '이미지링크(Imgur 등 이용)', '가격',"적용하려면 여기를 누르세요"]
     print("FORMAT WIDTHS-ORDERS")
     set_column_width(wsorders, "A", 170)
     set_column_width(wsorders, "B", 240)
@@ -245,7 +245,7 @@ async def route_tokenlogin(request):
         data = request.form
         userdata = mjson.loads(data['user'][0])[0]
         id=userdata['uid']
-        usertag = requests.get(f"https://api.twitter.com/2/users/{id}", headers={"Authorization": storeconfig.TwitterApiKey}).json()['data']['username']
+        usertag = requests.get(f"https://api.twitter.com/1.1/users/show.json?user_id={id}", headers={"Authorization": storeconfig.TwitterApiKey}).json()['screen_name']
         ndata = {}
 
         ndata.update({"usertag": "@" + usertag})
