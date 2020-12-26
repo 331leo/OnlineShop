@@ -553,7 +553,7 @@ ul {
 			}
 
 				body:not(.is-touch) .tiles article:hover > .image:before {
-					background-color: #333333;
+					background-color: gray;
 					opacity: 0.35;
 				}
 
@@ -565,7 +565,10 @@ ul {
 				max-height: 15em;
 				opacity: 1;
 			}
-
+        body.is-touch .tiles article .content {
+			max-height: 15em;
+			opacity: 1;
+		}
 		* + .tiles {
 			margin-top: 2em;
 		}
