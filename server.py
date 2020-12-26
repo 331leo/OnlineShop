@@ -91,7 +91,7 @@ def init_spreadsheet():
             {"style": "SOLID_MEDIUM"}
     }})
     orders_header=['주문일시', '주문고유번호', '상품명', '가격', '주소', '이름', '핸드폰번호', '로그인 방법','로그인 계정', '유저ID', '영주증주소']
-    products_header=['상품명', '설명(개행<br>)', '이미지링크(Imgur 등 이용)', '가격',"적용하려면 여기를 누르세요"]
+    products_header=['상품명', '설명(개행<br>)', '이미지링크(Imgur 등 이용, 1:1비율)', '가격',"적용하려면 여기를 누르세요"]
     print("FORMAT WIDTHS-ORDERS")
     set_column_width(wsorders, "A", 170)
     set_column_width(wsorders, "B", 240)
@@ -315,7 +315,10 @@ async def buying(request):
     phonenum=data['phonenum'][0]
     postalcode = data['postalcode'][0]
     address = data['address'][0]
-    building = data['building'][0]
+    try:
+        building = data['building'][0]
+    except:
+        building = " "
     detail = data['detail'][0]
     realname = data['realname'][0]
     finaladdress=f"{address} {detail} ({building}), {postalcode}"
@@ -358,7 +361,7 @@ async def payproceed(request):
     doc = doc.to_dict()
     price=doc['price']
     if amount == str(price):
-        TossBasicAuthKey=base64.b64encode((storeconfig.TossSecretKey+":").encode('utf-8'))
+        TossBasicAuthKey="Basic "+base64.b64encode((storeconfig.TossSecretKey+":").encode('utf-8')).decode("utf-8")
         headers={'Authorization':TossBasicAuthKey,'Content-Type': 'application/json'}
         data={"orderId":orderid,"amount":price}
         res = requests.post(f"https://api.tosspayments.com/v1/payments/{paymentkey}",headers=headers,json=data)
