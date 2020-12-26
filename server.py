@@ -160,6 +160,31 @@ async def route_shop(request):
         plist.append(p.to_dict())
     rdict=baserdict
 
+    footer_icons = ""
+
+    for i in storeconfig.footer_icons:
+        icon = i['icon']
+        url = i['url']
+        footer_icon="""<li>
+                <a
+                  href="{url}"
+                  class="icon style2 {icon}"
+                  ></a
+                >
+              </li>""".format(url=url,icon=icon)
+        footer_icons+=footer_icon
+
+
+    footer_html="""
+              <section>
+            <h2 style="{style}">Links</h2>
+            <ul class="icons">
+                {footer_icons}
+            </ul>
+          </section>
+    """.format(style=storeconfig.footer_style,footer_icons=footer_icons)
+    if len(storeconfig.footer_icons) < 1:
+        footer_html = ""
     rdict.update({"TossClientKey":storeconfig.TossClientKey,"firedata":storeconfig.firebase_web_cert,"plist":plist,"notice_site":storeconfig.notice_site,"modtool_url":storeconfig.spreadsheet_url,"title_style":storeconfig.title_style,"description_style":storeconfig.description_style,"footer_style":storeconfig.footer_style,"footer_html":footer_html})
     template = templateEnv.get_template('index.html')
     return response.html(template.render(rdict))

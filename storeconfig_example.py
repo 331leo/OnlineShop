@@ -47,3 +47,11 @@ firebase_web_cert={
 "measurementId": "FIREBASE WEB CERTS"
 }
 
+#EXPERIMENTAL
+title_style="font-family: Cafe24Oneprettynight;" #Black for default
+description_style=""
+footer_style=""
+footer_icons=[
+    {"icon":"brands fa-twitter","url":"https://twitter.com/twitterlink"},
+    {"icon":"solid fa-envelope","url":"mailto:help@example.com"}
+] #list of [font awesome, url]

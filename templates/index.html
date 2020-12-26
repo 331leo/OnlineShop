@@ -17,10 +17,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, user-scalable=no"
     />
-    <link rel="stylesheet" href="../assets/css/main.css" />
-    <noscript
-      ><link rel="stylesheet" href="../assets/css/noscript.css"
-    /></noscript>
+    <link rel="stylesheet" href="../assets/main.css" />
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
@@ -89,7 +86,9 @@
         });
 
       $(document).ready(function () {
-        //웹페이지가 로드가 완료 후에 해당 함수를 실행합니다.
+      var browser=function(){"use strict";var e={name:null,version:null,os:null,osVersion:null,touch:null,mobile:null,_canUse:null,canUse:function(n){e._canUse||(e._canUse=document.createElement("div"));var o=e._canUse.style,r=n.charAt(0).toUpperCase()+n.slice(1);return n in o||"Moz"+r in o||"Webkit"+r in o||"O"+r in o||"ms"+r in o},init:function(){var n,o,r,i,t=navigator.userAgent;for(n="other",o=0,r=[["firefox",/Firefox\/([0-9\.]+)/],["bb",/BlackBerry.+Version\/([0-9\.]+)/],["bb",/BB[0-9]+.+Version\/([0-9\.]+)/],["opera",/OPR\/([0-9\.]+)/],["opera",/Opera\/([0-9\.]+)/],["edge",/Edge\/([0-9\.]+)/],["safari",/Version\/([0-9\.]+).+Safari/],["chrome",/Chrome\/([0-9\.]+)/],["ie",/MSIE ([0-9]+)/],["ie",/Trident\/.+rv:([0-9]+)/]],i=0;i<r.length;i++)if(t.match(r[i][1])){n=r[i][0],o=parseFloat(RegExp.$1);break}for(e.name=n,e.version=o,n="other",o=0,r=[["ios",/([0-9_]+) like Mac OS X/,function(e){return e.replace("_",".").replace("_","")}],["ios",/CPU like Mac OS X/,function(e){return 0}],["wp",/Windows Phone ([0-9\.]+)/,null],["android",/Android ([0-9\.]+)/,null],["mac",/Macintosh.+Mac OS X ([0-9_]+)/,function(e){return e.replace("_",".").replace("_","")}],["windows",/Windows NT ([0-9\.]+)/,null],["bb",/BlackBerry.+Version\/([0-9\.]+)/,null],["bb",/BB[0-9]+.+Version\/([0-9\.]+)/,null],["linux",/Linux/,null],["bsd",/BSD/,null],["unix",/X11/,null]],i=0;i<r.length;i++)if(t.match(r[i][1])){n=r[i][0],o=parseFloat(r[i][2]?r[i][2](RegExp.$1):RegExp.$1);break}e.os=n,e.osVersion=o,e.touch="wp"==e.os?navigator.msMaxTouchPoints>0:!!("ontouchstart"in window),e.mobile="wp"==e.os||"android"==e.os||"ios"==e.os||"bb"==e.os}};return e.init(),e}();!function(e,n){"function"==typeof define&&define.amd?define([],n):"object"==typeof exports?module.exports=n():e.browser=n()}(this,function(){return browser});
+        if (browser.mobile)
+			$('body').addClass('is-touch');
         console.log("Jquery Ready");
         window.onload=function() {
             window.setTimeout(function() {
@@ -153,7 +152,7 @@
       <div id="main">
         <div class="inner">
           <header>
-            <h1 style="font-family: Cafe24Oneprettynight">
+            <h1 style="{{title_style}}">
               {{store_title}}<br />
             </h1>
             <div id="userinfo">
@@ -366,7 +365,7 @@
         	var numid=i+1
         	var boxid="box"+numid.toString()
         	var randstyle="style"+generateRandom(1,6).toString()
-        	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="" /></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="font-family: Cafe24Oneprettynight;">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
+        	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="" /></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="{{description_style}}">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
 
 
         }
@@ -378,42 +377,10 @@
       </script>
 
       <footer id="footer">
-        <style>
-          iframe {
-            -moz-transform: scale(1.2, 1.2);
-            -webkit-transform: scale(1.2, 1.2);
-            -o-transform: scale(1.2, 1.2);
-            -ms-transform: scale(1.2, 1.2);
-            transform: scale(1.2, 1.2);
-            -moz-transform-origin: bottom left;
-            -webkit-transform-origin: bottom left;
-            -o-transform-origin: bottom left;
-            -ms-transform-origin: bottom left;
-            transform-origin: bottom left;
-          }
-        </style>
         <div class="inner">
-          <section>
-            <h2 style="font-family: Cafe24Oneprettynight">Links</h2>
-            <ul class="icons">
-              <li>
-                <a
-                  href="https://twitter.com/debonaircandle"
-                  class="icon brands style2 fa-twitter"
-                  ><span class="label">GitHub</span></a
-                >
-              </li>
-              <li>
-                <a
-                  href="mailto:support@leok.kr"
-                  class="icon solid style2 fa-envelope"
-                  ><span class="label">Email</span></a
-                >
-              </li>
-            </ul>
-          </section>
+            {{footer_html}}
           <ul class="copyright">
-            <li style="font-family: Cafe24Oneprettynight">
+            <li style="{{footer_style}}">
               &copy; Copyright(C).2020 {{store_name}}., All rights reserved
             </li>
           </ul>
