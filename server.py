@@ -20,7 +20,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
 import sys
-
+import base64
 
 #FireBase
 cred = credentials.Certificate('firebasecert.json')
@@ -192,20 +192,13 @@ async def route_shop(request):
 @app.route('/login')
 async def route_login(request):
     rdict = baserdict
-    rdict.update({"data": storeconfig.firebase_web_cert, "storeconfig": storeconfig})
-    template = templateEnv.get_template('login.select.html')
+    rdict.update({"cert": storeconfig.firebase_web_cert, "storeconfig": storeconfig})
+    template = templateEnv.get_template('login.html')
     return response.html(template.render(rdict))
 
-@app.route('/login/<oauth_provider>')
-#@jinja.template('login.html')
-async def route_login_given_provider(request,oauth_provider):
-    if oauth_provider == "twitter":
-        rdict=baserdict
-        rdict.update({"data": storeconfig.firebase_web_cert,"storeconfig":storeconfig})
-        template = templateEnv.get_template('login.html')
-        return response.html(template.render(rdict))
-
-    elif oauth_provider == "discord":
+if storeconfig.oauth_discord:
+    @app.route('/login/discord')
+    async def route_login_discord(request):
         try:
             OauthCode = request.args['code'][0]
             print(OauthCode)
@@ -365,7 +358,8 @@ async def payproceed(request):
     doc = doc.to_dict()
     price=doc['price']
     if amount == str(price):
-        headers={'Authorization':storeconfig.TossBasicAuthKey,'Content-Type': 'application/json'}
+        TossBasicAuthKey=base64.b64encode((storeconfig.TossSecretKey+":").encode('utf-8'))
+        headers={'Authorization':TossBasicAuthKey,'Content-Type': 'application/json'}
         data={"orderId":orderid,"amount":price}
         res = requests.post(f"https://api.tosspayments.com/v1/payments/{paymentkey}",headers=headers,json=data)
         if res.status_code == requests.codes.ok:

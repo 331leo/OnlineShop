@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko">
+
+<html  lang="ko">
   <head>
     <meta charset="UTF-8" />
     <link rel="shortcut icon" href="assets/favicon.ico" />
@@ -19,23 +20,28 @@
 				 https://firebase.google.com/docs/web/setup#available-libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-analytics.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-auth.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth__ko.js"></script>
+<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
+
 
     <script>
       // Your web app's Firebase configuration
       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
       var firebaseConfig = {
-        apiKey: "{{data['apiKey']}}",
-        authDomain: "{{data['authDomain']}}",
-        projectId: "{{data['projectId']}}",
-        storageBucket: "{{data['storageBucket']}}",
-        messagingSenderId: "{{data['messagingSenderId']}}",
-        appId: "{{data['appId']}}",
-        measurementId: "{{data['measurementId']}}",
+        apiKey: "{{cert['apiKey']}}",
+        authDomain: "{{cert['authDomain']}}",
+        projectId: "{{cert['projectId']}}",
+        storageBucket: "{{cert['storageBucket']}}",
+        messagingSenderId: "{{cert['messagingSenderId']}}",
+        appId: "{{cert['appId']}}",
+        measurementId: "{{cert['measurementId']}}",
       };
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
       firebase.analytics();
-      var provider = new firebase.auth.TwitterAuthProvider();
+      // Initialize the FirebaseUI Widget using Firebase.
+        var ui = new firebaseui.auth.AuthUI(firebase.auth());
+
     </script>
     <script>
       function post_to_url(path, params, method) {
@@ -59,9 +65,31 @@
         form.submit();
       }
     </script>
+      <script>
+          function onbodyload(){
+            {% if storeconfig.oauth_discord == True %}
+                const _sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+
+                const adddiscord = async () => {
+                    while(1) {
+                        await _sleep(100);
+                        try{
+                        list = document.getElementsByClassName("firebaseui-idp-list")[0]
+                        console.log(list)
+                        var newcontent = document.createElement('a')
+                        var dsvg='<svg class=\"firebaseui-idp-icon\" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="discord" class="svg-inline--fa fa-discord fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M297.216 243.2c0 15.616-11.52 28.416-26.112 28.416-14.336 0-26.112-12.8-26.112-28.416s11.52-28.416 26.112-28.416c14.592 0 26.112 12.8 26.112 28.416zm-119.552-28.416c-14.592 0-26.112 12.8-26.112 28.416s11.776 28.416 26.112 28.416c14.592 0 26.112-12.8 26.112-28.416.256-15.616-11.52-28.416-26.112-28.416zM448 52.736V512c-64.494-56.994-43.868-38.128-118.784-107.776l13.568 47.36H52.48C23.552 451.584 0 428.032 0 398.848V52.736C0 23.552 23.552 0 52.48 0h343.04C424.448 0 448 23.552 448 52.736zm-72.96 242.688c0-82.432-36.864-149.248-36.864-149.248-36.864-27.648-71.936-26.88-71.936-26.88l-3.584 4.096c43.52 13.312 63.744 32.512 63.744 32.512-60.811-33.329-132.244-33.335-191.232-7.424-9.472 4.352-15.104 7.424-15.104 7.424s21.248-20.224 67.328-33.536l-2.56-3.072s-35.072-.768-71.936 26.88c0 0-36.864 66.816-36.864 149.248 0 0 21.504 37.12 78.08 38.912 0 0 9.472-11.52 17.152-21.248-32.512-9.728-44.8-30.208-44.8-30.208 3.766 2.636 9.976 6.053 10.496 6.4 43.21 24.198 104.588 32.126 159.744 8.96 8.96-3.328 18.944-8.192 29.44-15.104 0 0-12.8 20.992-46.336 30.464 7.68 9.728 16.896 20.736 16.896 20.736 56.576-1.792 78.336-38.912 78.336-38.912z"></path></svg>'
+                        newcontent.innerHTML = '<li class=\"firebaseui-list-item\"><button onclick="window.location.href=window.location.origin+\'/login/discord\'" class=\"firebaseui-idp-button mdl-button mdl-js-button mdl-button--raised firebaseui-id-idp-button\" data-provider-id=\"discord.com\" style=\"background-color:royalblue\" data-upgraded=\",MaterialButton\"><span class=\"firebaseui-idp-icon-wrapper\">'+dsvg+'</span><span class=\"firebaseui-idp-text firebaseui-idp-text-long\">Discord(으)로 로그인</span><span class=\"firebaseui-idp-text firebaseui-idp-text-short\">Discord</span></button></li>'
+                        list.appendChild(newcontent.firstChild);
+                        break
+                        }catch (error){}
+                    }
+                };
+                adddiscord();
+            {% endif %}
+}
+</script>
   </head>
-  <body>
-    <style>
+      <style>
       .loader {
         border: 16px solid #f3f3f3; /* Light grey */
         border-top: 16px solid #3498db; /* Blue */
@@ -93,60 +121,96 @@
         width: 120px;
         height: 120px;
       }
+      .loginbox {
+          position: absolute;
+          width: 300px;
+          height: 300px;
+          z-index: 15;
+          top: 50%;
+          left: 50%;
+          margin: -100px 0 0 -150px;
+
+        }
     </style>
+
+  <body onload="onbodyload()">
+
 
     <script>
       $(document).ready(function () {
         //웹페이지가 로드가 완료 후에 해당 함수를 실행합니다.
         console.log("Jquery Ready");
       });
-      firebase
-        .auth()
-        .getRedirectResult()
-        .then(function (result) {
-          if (result.credential) {
-            // This gives you a the Twitter OAuth 1.0 Access Token and Secret.
-            // You can use these server side with your app's credentials to access the Twitter API.
-            var data = {};
-            var user = result.user;
+var uiConfig = {
 
-            var token = result.credential.accessToken;
+  callbacks: {
+    signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+        console.log(authResult)
+        console.log(redirectUrl)
+        result = authResult
+        var data = {};
+        var user = result.user;
 
-            var secret = result.credential.secret;
+        var token = result.credential.accessToken;
 
-            var pvdata = user.providerData;
+        var secret = result.credential.secret;
 
-            console.log(token);
+        var pvdata = user.providerData;
 
-            console.log(secret);
+        console.log(token);
 
-            console.log(user);
-            console.log(pvdata[0]);
-            var data = {
-              token: token,
-              secret: secret,
-              user: JSON.stringify(pvdata),
-            };
-            post_to_url(window.location.origin + "/tokenlogin?provider=twitter", data);
-            // ...
-          } else {
-            firebase.auth().signInWithRedirect(provider);
-            document.write("redirecting...");
+        console.log(secret);
+
+        console.log(user);
+        console.log(pvdata[0]);
+        var data = {
+          token: token,
+          secret: secret,
+          user: JSON.stringify(pvdata),
+        };
+        console.log(data)
+        console.log(pvdata[0]['providerId'])
+        post_to_url(window.location.origin + "/tokenlogin?provider="+pvdata[0].providerId, data);
+        // ...
+      return false;
+    },uiShown: function() {
+            // The widget is rendered.
+            // Hide the loader.
+            document.getElementById('loader').style.display = 'none';
           }
-          // The signed-in user info.
-        })
-        .catch(function (error) {
-          // Handle Errors here.
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          // The email of the user's account used.
-          var email = error.email;
-          // The firebase.auth.AuthCredential type that was used.
-          var credential = error.credential;
-          // ...
-        });
+  },
+  // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+  signInOptions: [
+    // Leave the lines as is for the providers you want to offer your users.
+    {% if storeconfig.oauth_google == True %}
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+    {% endif %}
+    {% if storeconfig.oauth_facebook == True %}
+    firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+    {% endif %}
+    {% if storeconfig.oauth_twitter == True %}
+    firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+    {% endif %}
+    {% if storeconfig.oauth_github == True %}
+    firebase.auth.GithubAuthProvider.PROVIDER_ID,
+    {% endif %}
+
+
+  ],
+
+};
+
+// The start method will wait until the DOM is loaded.
+ui.start('#firebaseui-auth-container', uiConfig);
+
+
+
     </script>
-    <div class="loader"></div>
-    <div class="center">로그인하는중..</div>
+    <div id="loader"></div>
+    <div id="firebaseui-auth-container" class="loginbox">    </div>
+
   </body>
+<script>
+
+</script>
 </html>

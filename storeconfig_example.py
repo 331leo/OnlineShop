@@ -14,6 +14,7 @@ oauth_google = True
 oauth_twitter = True
 oauth_github = True
 oauth_facebook = True
+oauth_discord = False
 
 #GOOGLE SPREADSHEET
 spreadsheet_url="https://docs.google.com/spreadsheets/d/YOUR_OWN_SPREADSHEET_URL/edit?usp=sharing"
@@ -21,7 +22,7 @@ spreadsheet_url="https://docs.google.com/spreadsheets/d/YOUR_OWN_SPREADSHEET_URL
 #CREDENTIALS
 TossClientKey = "TOSS API KEY"
 TossSecretKey= "TOSS SECRET KEY"
-TossBasicAuthKey="BASE64 Encode Of secret key"
+
 
 coolsms_api_key = "COOLSMS API KEY"
 coolsms_api_secret = "COOLSMS API SECRET"
@@ -48,10 +49,10 @@ firebase_web_cert={
 }
 
 #EXPERIMENTAL
-title_style="font-family: Cafe24Oneprettynight;" #Black for default
-description_style=""
-footer_style=""
+title_style="" #Black for default
+description_style="font-family: Cafe24Oneprettynight;"
+footer_style="font-family: Cafe24Oneprettynight;"
 footer_icons=[
     {"icon":"brands fa-twitter","url":"https://twitter.com/twitterlink"},
     {"icon":"solid fa-envelope","url":"mailto:help@example.com"}
-] #list of [font awesome, url]
+] #list of {"icon": Font-awesome-icon-code, "url": href on html code}
