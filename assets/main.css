@@ -540,24 +540,8 @@ ul {
 					.tiles article > a .content > :last-child {
 						margin-bottom: 0;
 					}
-
-			.tiles article.style3 > .image:before {
+            .tiles article.style1 > .image:before {
 				/*background-color: #7bd0c1;*/
-                background-color: dimgray;
-			}
-
-			.tiles article.style4 > .image:before {
-				/*background-color: #c75b9b;*/
-                background-color: dimgray;
-			}
-
-			.tiles article.style5 > .image:before {
-				/*background-color: #ae85ca;*/
-                background-color: dimgray;
-			}
-
-			.tiles article.style6 > .image:before {
-				/*background-color: #8499e7;*/
                 background-color: dimgray;
 			}
 

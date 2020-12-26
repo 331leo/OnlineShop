@@ -342,10 +342,7 @@
         	el.appendChild(div.children[0]);
           }
         }
-        var generateRandom = function (min, max) {
-        	var ranNum = Math.floor(Math.random()*(max-min+1)) + min;
-        	return ranNum;
-        }
+
         var plist = {{plist}}
         var plen = plist.length
 
@@ -353,8 +350,7 @@
         for(var i=0; i<plist.length;i++){
         	var numid=i+1
         	var boxid="box"+numid.toString()
-        	var randstyle="style"+generateRandom(1,6).toString()
-        	appendHtml(container,'<article id="'+boxid+'" class="'+randstyle+'"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="IMAGE LOADING..." style="object-fit: cover"/></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="{{description_style}}">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
+        	appendHtml(container,'<article id="'+boxid+'" class="style1"><span class="image"><img id="'+boxid+'.img" src="'+plist[i]["imgsrc"]+'" alt="올바르지 않은 이미지 링크입니다. .jpg, .png로 끝나는 링크를 입력해주세요. (이미지 우클릭->이미지 링크 복사)" width="500" height="412" style="object-fit: cover"/></span><a href="javascript:;", onclick=boxclicked('+numid+')><h2 id="'+boxid+'.pname" style="font-family: \'Black Han Sans\', sans-serif;">'+plist[i]['name']+'</h2><div id="'+boxid+'.content" class="content"><p style="{{description_style}}">'+plist[i]['content']+'<br>💳 KRW '+plist[i]['price']+'</p></div></a></article>');
 
 
         }
