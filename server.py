@@ -1,9 +1,7 @@
 import datetime
-import openpyxl
 import json as mjson
 from sanic import Sanic
 from sanic import response
-
 from sanic.response import json
 from sanic.response import redirect
 from sdk.api.message import Message
@@ -312,15 +310,15 @@ async def buying(request):
     id=data['userid'][0]
     prodcode = data['prodcode'][0]
 
-    phonenum=data['phonenum'][0]
-    postalcode = data['postalcode'][0]
-    address = data['address'][0]
+    phonenum=data.get('phonenum',[""])[0]
+    postalcode = data.get('postalcode',[""])[0]
+    address = data.get('address',[""])[0]
     try:
         building = f"({data['building'][0]})"
     except:
         building = ""
-    detail = data['detail'][0]
-    realname = data['realname'][0]
+    detail = data.get('detail',[""])[0]
+    realname = data.get('realname',[""])[0]
     finaladdress=f"{address} {detail} {building}, {postalcode}"
 
     now = datetime.datetime.utcnow()
