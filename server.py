@@ -146,7 +146,7 @@ except:
 wsorders=spreadsheet.worksheet('Orders')
 wsproducts=spreadsheet.worksheet('Products')
 @app.route('/')
-async def login(request):
+async def route_root(request):
     return response.redirect(f"/login/{storeconfig.default_oauth_provider}")
 
 @app.route('/shop')
@@ -217,8 +217,6 @@ if storeconfig.oauth_discord:
         except:
             discordOauthUrl = f"https://discord.com/api/oauth2/authorize?client_id={storeconfig.DiscordCilentID}&redirect_uri=https%3A%2F%2F{storeconfig.site_url}%2Flogin%2Fdiscord&response_type=code&scope=identify%20email"
             return response.redirect(discordOauthUrl)
-
-
 
 
 
@@ -303,9 +301,8 @@ async def route_verify_token(request):
         print(f'{e}')
         return json({"code":"2"})
 
-
 @app.route('/buying',methods = ['POST'])
-async def buying(request):
+async def route_buying(request):
     data = request.form
     id=data['userid'][0]
     prodcode = data['prodcode'][0]
@@ -348,7 +345,7 @@ async def buying(request):
     return response.json(d)
 
 @app.route('/payproceed',methods = ['POST',"GET"])
-async def payproceed(request):
+async def route_payproceed(request):
     data=request.args
     paymentkey=data['paymentKey'][0]
     orderid=data['orderId'][0]
@@ -399,12 +396,13 @@ async def payproceed(request):
 
 
 @app.route('/payfail')
-async def payfail(request):
-    return json({"ERROR":"알수없는에러, 문의바랍니다."})
+async def route_payfail(request):
+    data=request.json()
+    return json({"ERROR":data})
 
 @app.route('/success')
 #@jinja.template('success.html')
-async def success(request):
+async def route_success(request):
     rdict = baserdict
     try:
         data=request.args
@@ -438,7 +436,7 @@ async def success(request):
     return response.html(template.render(rdict))
 
 @app.route("/update")
-async def update_products(request):
+async def route_update(request):
     plist=wsproducts.get_all_values()
     plist.pop(0)
     alldoc = db.collection("products").get()
@@ -452,12 +450,9 @@ async def update_products(request):
     return response.redirect("/shop")
 
 
-@app.route('/test', methods = ['POST',"GET","DELETE"])
-async def testroute(request):
-    a=request.json
-    print(a)
-
-    return json({"json":a})
+@app.route('/rpt', methods = ['POST',"GET","DELETE"])
+async def route_rpt(request):
+    return response.text(request.header)
 
 
 
