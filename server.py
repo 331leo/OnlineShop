@@ -142,9 +142,13 @@ try:
         print("finish")
 except:
     pass
+try:
+    wsorders=spreadsheet.worksheet('Orders')
+    wsproducts=spreadsheet.worksheet('Products')
+except:
+    init_spreadsheet()
+    print("프로그램 초기설정을 완료하였습니다. 재시작해주세요!")
 
-wsorders=spreadsheet.worksheet('Orders')
-wsproducts=spreadsheet.worksheet('Products')
 @app.route('/')
 async def route_root(request):
     return response.redirect(f"/login/{storeconfig.default_oauth_provider}")
